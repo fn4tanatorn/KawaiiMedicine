@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth/require-user";
 import { youtubeId } from "@/lib/format";
 import { alert } from "@/components/ui";
+import { FileList } from "@/components/file-list";
 import { VideoPlayer } from "./video-player";
 
 const SIGNED_URL_TTL_SECONDS = 60 * 60 * 3;
@@ -61,21 +62,30 @@ export default async function VideoPage({
       : { kind: "external", url: video.external_url };
   }
 
-  const [{ data: progress }, { data: courseFeedback }] = await Promise.all([
-    supabase
-      .from("video_progress")
-      .select("seconds_watched, completed")
-      .eq("user_id", user.id)
-      .eq("video_id", video.id)
-      .maybeSingle(),
-    // Only matters on the last video; harmless (and cheap, unique-indexed) otherwise.
-    supabase
-      .from("course_feedback")
-      .select("id")
-      .eq("course_id", course.id)
-      .eq("user_id", user.id)
-      .maybeSingle(),
-  ]);
+  const [{ data: progress }, { data: courseFeedback }, { data: fileLinks }] =
+    await Promise.all([
+      supabase
+        .from("video_progress")
+        .select("seconds_watched, completed")
+        .eq("user_id", user.id)
+        .eq("video_id", video.id)
+        .maybeSingle(),
+      // Only matters on the last video; harmless (and cheap, unique-indexed) otherwise.
+      supabase
+        .from("course_feedback")
+        .select("id")
+        .eq("course_id", course.id)
+        .eq("user_id", user.id)
+        .maybeSingle(),
+      supabase
+        .from("video_files")
+        .select("course_files(id, title, size_bytes, position)")
+        .eq("video_id", video.id),
+    ]);
+  const files = (fileLinks ?? [])
+    .map((l) => l.course_files)
+    .filter((f) => f != null)
+    .sort((a, b) => a.position - b.position);
 
   return (
     <main className="space-y-6">
@@ -112,6 +122,8 @@ export default async function VideoPage({
           {video.description}
         </p>
       )}
+
+      <FileList files={files} className="max-w-2xl" />
 
       <nav className="flex items-center justify-between border-t border-line pt-4 text-sm">
         {prev ? (

@@ -102,6 +102,15 @@ export async function deleteCourse(formData: FormData) {
     .filter((p): p is string => !!p);
   if (paths.length) await supabase.storage.from("videos").remove(paths);
 
+  const { data: files } = await supabase
+    .from("course_files")
+    .select("storage_path")
+    .eq("course_id", id);
+  if (files?.length)
+    await supabase.storage
+      .from("course-files")
+      .remove(files.map((f) => f.storage_path));
+
   const { error } = await supabase.from("courses").delete().eq("id", id);
   if (error) redirect(withMsg(`/admin/courses/${id}`, "error", "ลบไม่สำเร็จ"));
   revalidatePath("/admin/courses");
@@ -170,6 +179,27 @@ export async function updateVideo(formData: FormData) {
 
   const { error } = await supabase.from("videos").update(patch).eq("id", id);
   if (error) redirect(withMsg(path, "error", "บันทึกไม่สำเร็จ"));
+
+  // The edit form only renders file checkboxes when the course has files.
+  if (formData.has("sync_files")) {
+    const fileIds = formData.getAll("file_ids").map(String);
+    const { error: delErr } = await supabase
+      .from("video_files")
+      .delete()
+      .eq("video_id", id);
+    const { error: insErr } = fileIds.length
+      ? await supabase.from("video_files").insert(
+          fileIds.map((fileId) => ({
+            video_id: id,
+            file_id: fileId,
+            course_id: courseId,
+          })),
+        )
+      : { error: null };
+    if (delErr || insErr)
+      redirect(withMsg(path, "error", "บันทึกเอกสารประกอบไม่สำเร็จ"));
+  }
+
   revalidatePath(path);
   revalidatePath("/learn");
   redirect(withMsg(path, "ok", "บันทึกวิดีโอแล้ว"));
@@ -250,6 +280,83 @@ export async function registerUploadedVideo(input: {
   if (error) return { ok: false };
   revalidatePath(`/admin/courses/${input.courseId}`);
   return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Course files (PDF slides)
+// ---------------------------------------------------------------------------
+
+/** Called after a successful browser upload to register the row. Returns instead of redirecting. */
+export async function registerCourseFile(input: {
+  courseId: string;
+  title: string;
+  storagePath: string;
+  sizeBytes: number;
+  isPublished: boolean;
+}): Promise<{ ok: boolean }> {
+  const { supabase } = await requireStaff();
+  const title = input.title.trim();
+  if (!title || !input.storagePath.startsWith(`${input.courseId}/`))
+    return { ok: false };
+
+  const { data: last } = await supabase
+    .from("course_files")
+    .select("position")
+    .eq("course_id", input.courseId)
+    .order("position", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const { error } = await supabase.from("course_files").insert({
+    course_id: input.courseId,
+    title,
+    storage_path: input.storagePath,
+    size_bytes: Math.max(0, Math.round(input.sizeBytes)),
+    position: (last?.position ?? -1) + 1,
+    is_published: input.isPublished,
+  });
+  if (error) return { ok: false };
+  revalidatePath(`/admin/courses/${input.courseId}`);
+  revalidatePath("/learn");
+  return { ok: true };
+}
+
+export async function updateCourseFile(formData: FormData) {
+  const { supabase } = await requireStaff();
+  const id = str(formData, "id");
+  const courseId = str(formData, "course_id");
+  const path = `/admin/courses/${courseId}`;
+  const title = str(formData, "title");
+  if (!title) redirect(withMsg(path, "error", "กรุณากรอกชื่อเอกสาร"));
+
+  const { error } = await supabase
+    .from("course_files")
+    .update({ title, is_published: bool(formData, "is_published") })
+    .eq("id", id);
+  if (error) redirect(withMsg(path, "error", "บันทึกไม่สำเร็จ"));
+  revalidatePath(path);
+  revalidatePath("/learn");
+  redirect(withMsg(path, "ok", "บันทึกเอกสารแล้ว"));
+}
+
+export async function deleteCourseFile(formData: FormData) {
+  const { supabase } = await requireStaff();
+  const id = str(formData, "id");
+  const courseId = str(formData, "course_id");
+  const path = `/admin/courses/${courseId}`;
+
+  const { data: f } = await supabase
+    .from("course_files")
+    .select("storage_path")
+    .eq("id", id)
+    .maybeSingle();
+  if (f) await supabase.storage.from("course-files").remove([f.storage_path]);
+
+  const { error } = await supabase.from("course_files").delete().eq("id", id);
+  if (error) redirect(withMsg(path, "error", "ลบไม่สำเร็จ"));
+  revalidatePath(path);
+  revalidatePath("/learn");
+  redirect(withMsg(path, "ok", "ลบเอกสารแล้ว"));
 }
 
 // ---------------------------------------------------------------------------

@@ -2,19 +2,22 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/auth/require-user";
-import { formatDuration } from "@/lib/format";
+import { formatBytes, formatDuration } from "@/lib/format";
 import { badge, btn, card, input, label } from "@/components/ui";
 import { Flash } from "@/components/flash";
 import { ConfirmButton } from "@/components/confirm-button";
 import {
   createVideo,
   deleteCourse,
+  deleteCourseFile,
   deleteVideo,
   moveVideo,
   updateCourse,
+  updateCourseFile,
   updateVideo,
 } from "../../actions";
 import { VideoUpload } from "./video-upload";
+import { CourseFileUpload } from "./course-file-upload";
 
 export const metadata: Metadata = { title: "แก้ไขคอร์ส" };
 
@@ -29,12 +32,22 @@ export default async function AdminCoursePage({
   const { data: course } = await supabase
     .from("courses")
     .select(
-      "id, slug, title, description, is_published, videos(id, title, description, storage_path, external_url, duration_seconds, position, is_published)",
+      "id, slug, title, description, is_published, videos(id, title, description, storage_path, external_url, duration_seconds, position, is_published, video_files(file_id)), course_files(id, title, size_bytes, position, is_published)",
     )
     .eq("id", id)
     .maybeSingle();
   if (!course) notFound();
   const videos = [...course.videos].sort((a, b) => a.position - b.position);
+  const files = [...course.course_files].sort(
+    (a, b) => a.position - b.position,
+  );
+  const videoCountByFile = new Map<string, number>();
+  for (const v of videos)
+    for (const l of v.video_files)
+      videoCountByFile.set(
+        l.file_id,
+        (videoCountByFile.get(l.file_id) ?? 0) + 1,
+      );
 
   return (
     <main className="space-y-8">
@@ -203,6 +216,34 @@ export default async function AdminCoursePage({
                                 className={input}
                               />
                             </label>
+                            {files.length > 0 && (
+                              <fieldset className="space-y-1.5 text-sm">
+                                <input
+                                  type="hidden"
+                                  name="sync_files"
+                                  value="1"
+                                />
+                                <legend className="font-medium">
+                                  เอกสารประกอบ
+                                </legend>
+                                {files.map((f) => (
+                                  <label
+                                    key={f.id}
+                                    className="flex items-center gap-2"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      name="file_ids"
+                                      value={f.id}
+                                      defaultChecked={v.video_files.some(
+                                        (l) => l.file_id === f.id,
+                                      )}
+                                    />
+                                    {f.title}
+                                  </label>
+                                ))}
+                              </fieldset>
+                            )}
                             <label className="flex items-center gap-2 text-sm">
                               <input
                                 type="checkbox"
@@ -271,9 +312,112 @@ export default async function AdminCoursePage({
               </ol>
             )}
           </section>
+
+          <section>
+            <h2 className="font-semibold">เอกสารประกอบ PDF ({files.length})</h2>
+            {files.length === 0 ? (
+              <p className="mt-3 rounded-lg border border-dashed border-line p-6 text-center text-sm text-ink-2">
+                ยังไม่มีเอกสาร อัปโหลดจากแผงด้านขวา
+              </p>
+            ) : (
+              <ul className="mt-3 space-y-3">
+                {files.map((f) => {
+                  const used = videoCountByFile.get(f.id) ?? 0;
+                  return (
+                    <li key={f.id} className={card}>
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-medium">{f.title}</span>
+                            <span
+                              className={
+                                f.is_published ? badge.green : badge.gray
+                              }
+                            >
+                              {f.is_published ? "เผยแพร่" : "ฉบับร่าง"}
+                            </span>
+                            <span className="text-xs text-ink-2">
+                              {formatBytes(f.size_bytes)} ·{" "}
+                              {used
+                                ? `ใช้ใน ${used} วิดีโอ`
+                                : "ยังไม่ผูกกับวิดีโอ"}
+                            </span>
+                          </div>
+                          <details className="mt-2">
+                            <summary className="cursor-pointer text-sm text-ink-2">
+                              แก้ไข
+                            </summary>
+                            <form
+                              action={updateCourseFile}
+                              className="mt-3 space-y-3"
+                            >
+                              <input type="hidden" name="id" value={f.id} />
+                              <input
+                                type="hidden"
+                                name="course_id"
+                                value={course.id}
+                              />
+                              <label className={label}>
+                                <span>ชื่อ</span>
+                                <input
+                                  name="title"
+                                  defaultValue={f.title}
+                                  required
+                                  className={input}
+                                />
+                              </label>
+                              <label className="flex items-center gap-2 text-sm">
+                                <input
+                                  type="checkbox"
+                                  name="is_published"
+                                  defaultChecked={f.is_published}
+                                />{" "}
+                                เผยแพร่
+                              </label>
+                              <button type="submit" className={btn.secondary}>
+                                บันทึก
+                              </button>
+                            </form>
+                          </details>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-1">
+                          <a
+                            href={`/learn/files/${f.id}`}
+                            className="rounded px-2 py-1 text-sm hover:bg-surface-2"
+                          >
+                            ดาวน์โหลด
+                          </a>
+                          <form action={deleteCourseFile}>
+                            <input type="hidden" name="id" value={f.id} />
+                            <input
+                              type="hidden"
+                              name="course_id"
+                              value={course.id}
+                            />
+                            <ConfirmButton
+                              message={`ลบเอกสาร "${f.title}"? วิดีโอที่ใช้เอกสารนี้จะไม่แสดงลิงก์อีก`}
+                              className="rounded px-2 py-1 text-sm text-danger hover:bg-danger-soft"
+                            >
+                              ลบ
+                            </ConfirmButton>
+                          </form>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
         </div>
 
         <aside className="space-y-6">
+          <section className={card}>
+            <h2 className="font-semibold">อัปโหลดเอกสาร PDF</h2>
+            <div className="mt-4">
+              <CourseFileUpload courseId={course.id} />
+            </div>
+          </section>
           <section className={card}>
             <h2 className="font-semibold">อัปโหลดไฟล์วิดีโอ</h2>
             <div className="mt-4">
