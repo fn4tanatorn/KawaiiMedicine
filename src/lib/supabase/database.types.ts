@@ -605,21 +605,27 @@ export type Database = {
       video_progress: {
         Row: {
           completed: boolean
+          completed_at: string | null
           seconds_watched: number
+          started_at: string | null
           updated_at: string
           user_id: string
           video_id: string
         }
         Insert: {
           completed?: boolean
+          completed_at?: string | null
           seconds_watched?: number
+          started_at?: string | null
           updated_at?: string
           user_id: string
           video_id: string
         }
         Update: {
           completed?: boolean
+          completed_at?: string | null
           seconds_watched?: number
+          started_at?: string | null
           updated_at?: string
           user_id?: string
           video_id?: string
@@ -634,6 +640,39 @@ export type Database = {
           },
           {
             foreignKeyName: "video_progress_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_watch_days: {
+        Row: {
+          user_id: string
+          video_id: string
+          watch_date: string
+        }
+        Insert: {
+          user_id: string
+          video_id: string
+          watch_date: string
+        }
+        Update: {
+          user_id?: string
+          video_id?: string
+          watch_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_watch_days_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_watch_days_video_id_fkey"
             columns: ["video_id"]
             isOneToOne: false
             referencedRelation: "videos"
@@ -739,6 +778,18 @@ export type Database = {
           current_streak: number
           last_active_date: string
           longest_streak: number
+        }[]
+      }
+      get_video_learning_time_stats: {
+        Args: { p_course_id?: string }
+        Returns: {
+          avg_active_days: number
+          avg_span_days: number
+          completed_count: number
+          in_progress_count: number
+          median_active_days: number
+          median_span_days: number
+          video_id: string
         }[]
       }
       is_staff: { Args: never; Returns: boolean }
