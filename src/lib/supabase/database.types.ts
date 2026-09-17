@@ -690,6 +690,7 @@ export type Database = {
           id: string
           is_published: boolean
           position: number
+          published_at: string | null
           storage_path: string | null
           title: string
           updated_at: string
@@ -703,6 +704,7 @@ export type Database = {
           id?: string
           is_published?: boolean
           position?: number
+          published_at?: string | null
           storage_path?: string | null
           title: string
           updated_at?: string
@@ -716,6 +718,7 @@ export type Database = {
           id?: string
           is_published?: boolean
           position?: number
+          published_at?: string | null
           storage_path?: string | null
           title?: string
           updated_at?: string
@@ -785,11 +788,22 @@ export type Database = {
         Returns: {
           avg_active_days: number
           avg_span_days: number
-          completed_count: number
+          finished_count: number
           in_progress_count: number
           median_active_days: number
           median_span_days: number
+          timed_count: number
           video_id: string
+        }[]
+      }
+      get_video_progress_summary: {
+        Args: { p_course_id?: string }
+        Returns: {
+          avg_completed: number
+          median_completed: number
+          not_started_students: number
+          published_videos: number
+          students: number
         }[]
       }
       is_staff: { Args: never; Returns: boolean }

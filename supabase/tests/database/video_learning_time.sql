@@ -2,27 +2,33 @@
 -- video_progress.started_at / completed_at (students can't forge them),
 -- watch days are recorded, and get_video_learning_time_stats() computes
 -- span / active days for students only and is staff-only.
+-- Also 20260917150000_video_progress_overview.sql: videos.published_at is
+-- trigger-owned and get_video_progress_summary() averages completions over
+-- every student, counting only videos students can see.
 -- Run with: supabase test db
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(12);
+select plan(17);
 
 select gen_random_uuid() as student_a \gset
 select gen_random_uuid() as student_b \gset
 select gen_random_uuid() as student_c \gset
 select gen_random_uuid() as student_d \gset
+select gen_random_uuid() as student_e \gset
 select gen_random_uuid() as student_legacy \gset
 select gen_random_uuid() as admin_user \gset
 select gen_random_uuid() as course1 \gset
 select gen_random_uuid() as video1 \gset
 select gen_random_uuid() as video2 \gset
+select gen_random_uuid() as video3 \gset
 
 insert into auth.users (id, email) values
   (:'student_a', 'vlt-a@test.local'),
   (:'student_b', 'vlt-b@test.local'),
   (:'student_c', 'vlt-c@test.local'),
   (:'student_d', 'vlt-d@test.local'),
+  (:'student_e', 'vlt-e@test.local'),
   (:'student_legacy', 'vlt-legacy@test.local'),
   (:'admin_user', 'vlt-admin@test.local');
 update public.profiles set role = 'admin' where id = :'admin_user';
@@ -32,7 +38,8 @@ values (:'course1', 'ci-vlt-course', 'CI VLT Course', true);
 
 insert into public.videos (id, course_id, title, external_url, is_published) values
   (:'video1', :'course1', 'Video 1', 'https://example.com/v1', true),
-  (:'video2', :'course1', 'Video 2', 'https://example.com/v2', true);
+  (:'video2', :'course1', 'Video 2', 'https://example.com/v2', true),
+  (:'video3', :'course1', 'Video 3 (draft)', 'https://example.com/v3', false);
 
 -- Historical fixtures for video2 with fixed timestamps: bypass the
 -- timestamp/watch-day triggers and write rows directly.
@@ -48,6 +55,8 @@ insert into public.video_progress (user_id, video_id, seconds_watched, completed
   (:'student_d', :'video2', 100, false, '2026-09-10 10:00+07', null),
   -- pre-migration completion with unknown start: excluded
   (:'student_legacy', :'video2', 600, true, null, null),
+  -- a draft video doesn't make student_e "started"
+  (:'student_e', :'video3', 600, true, '2026-09-01 09:00+07', '2026-09-01 10:00+07'),
   -- staff watching doesn't count
   (:'admin_user', :'video2', 600, true, '2026-09-01 09:00+07', '2026-09-30 09:00+07');
 
@@ -106,14 +115,17 @@ select throws_ok(
 select throws_ok(
   'select * from public.get_video_learning_time_stats()',
   '42501', 'staff only', 'students cannot read learning time stats');
+select throws_ok(
+  'select * from public.get_video_progress_summary()',
+  '42501', 'staff only', 'students cannot read the progress summary');
 
 -- ---------------------------------------------------------------------------
 select set_config('request.jwt.claims', json_build_object('sub', :'admin_user')::text, true);
 
 select is(
-  (select row(completed_count, in_progress_count)::text
+  (select row(finished_count, timed_count, in_progress_count)::text
    from public.get_video_learning_time_stats(:'course1') where video_id = :'video2'),
-  row(2, 1)::text, 'counts only students, and only completions with a known start');
+  row(3, 2, 1)::text, 'counts only students; day stats only use completions with a known start');
 select is(
   (select row(avg_span_days, median_span_days)::text
    from public.get_video_learning_time_stats(:'course1') where video_id = :'video2'),
@@ -124,7 +136,31 @@ select is(
   row(1.5, 1.5)::text, 'active days: watch days after completion are ignored');
 select is(
   (select count(*) from public.get_video_learning_time_stats(:'course1')),
-  2::bigint, 'returns a row for every video in the course');
+  3::bigint, 'returns a row for every video in the course');
+
+-- Published: video1 + video2 (video3 is a draft). Completions per student:
+-- a 1, b 1, c 1, legacy 1, d 0 (in progress), e 0 (only the draft).
+select is(
+  (select row(published_videos, students, avg_completed, median_completed, not_started_students)::text
+   from public.get_video_progress_summary(:'course1')),
+  row(2, 6, 0.7, 1.0, 1)::text,
+  'summary: every student counts, drafts and staff do not');
+
+-- ---------------------------------------------------------------------------
+reset role;
+
+select isnt(
+  (select published_at from public.videos where id = :'video1'),
+  null, 'inserting a published video sets published_at');
+select is(
+  (select published_at from public.videos where id = :'video3'),
+  null, 'a draft has no published_at');
+
+update public.videos set is_published = true where id = :'video3';
+update public.videos set published_at = '2000-01-01' where id = :'video3';
+select is(
+  (select published_at from public.videos where id = :'video3'),
+  now(), 'publishing sets published_at, and it cannot be overwritten');
 
 select * from finish();
 rollback;
