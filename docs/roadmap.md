@@ -94,3 +94,4 @@
 - 2026-09-17 — เพิ่มสถิติเวลาเรียนต่อวิดีโอ (คำขอ admin) — PR เปิดแล้ว รอ merge + `supabase db push`
 - 2026-09-17 — merge PR #6 + #7 และ `supabase db push` แล้ว: แนบสไลด์ PDF และสถิติเวลาเรียนต่อวิดีโอใช้งานได้บน production (สถิติเริ่มนับจากวันนี้; 24 แถว video_progress เดิมไม่มี started_at จึงไม่ถูกนับ)
 - 2026-09-17 — เพิ่มภาพรวม "ดูทันการลงคลิปไหม" ในหน้าเวลาเรียน (คำขอ admin) — PR เปิดแล้ว รอ merge + `supabase db push`
+- 2026-09-17 — merge PR #8 และ `supabase db push` แล้ว: ภาพรวม "ทุกคอร์ส" ใช้งานได้บน production (`published_at` ของ 3 คลิปเดิม backfill จาก `created_at`)
