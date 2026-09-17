@@ -39,6 +39,14 @@
 - [ ] **หน้าคอร์สภาพรวม/roadmap** — เพิ่มภาพรวมลำดับวิดีโอ + objective
   บนหน้า `/learn/[slug]` (ตาม #17, #21, #22)
 
+### นอก survey (คำขอจากผู้สอน)
+
+- [ ] **แนบสไลด์ PDF ให้นักเรียนดาวน์โหลด** — 1 คอร์สมีหลายไฟล์, 1 ไฟล์ผูกได้หลายวิดีโอ
+  (บทเรียนที่แบ่งหลายตอน), ไฟล์ละไม่เกิน 100 MB. ตาราง `course_files` + `video_files`,
+  bucket private `course-files`, ดาวน์โหลดผ่าน `/learn/files/[fileId]` (signed URL อายุ 60 วิ)
+  ⚠️ project ตั้ง global upload limit ไว้ที่ 50 MB → ไฟล์ 50–100 MB จะอัปไม่ผ่านจนกว่าจะเพิ่มใน
+  Dashboard → Storage → Settings (ต้องใช้ Pro plan)
+
 ## Phase 7 — Medium effort, impact สูงสุดจาก survey
 
 - [ ] **Quiz ผูกกับวิดีโอ** — ฟีเจอร์ที่ถูกขอมากที่สุด (7/39 คน: #18, #19, #26, #29, #33, #36, #40)
@@ -74,3 +82,4 @@
 
 - 2026-09-15 — สร้างเอกสาร วิเคราะห์จากผลสำรวจ 39 responses ครั้งแรก, ยังไม่เริ่ม phase ใด
 - 2026-09-15 — verify self-paced exam window: UI พร้อมใช้แล้วใน `admin/exams/[id]`, ไม่ต้อง dev เพิ่ม, marked done — เหลือแค่ operational (ตั้งค่า + สื่อสารกับนักเรียน)
+- 2026-09-17 — เพิ่มฟีเจอร์แนบสไลด์ PDF (คำขอผู้สอน ไม่ได้มาจาก survey) — PR เปิดแล้ว รอ merge + `supabase db push`

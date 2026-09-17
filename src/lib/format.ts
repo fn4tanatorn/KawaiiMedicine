@@ -51,3 +51,17 @@ export function youtubeId(url: string): string | null {
   }
   return null;
 }
+
+/** Human-readable file size, e.g. "12.3 MB". */
+export function formatBytes(bytes: number | null | undefined): string {
+  if (bytes == null || bytes < 0) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  const units = ["KB", "MB", "GB"];
+  let v = bytes / 1024;
+  let i = 0;
+  while (v >= 1024 && i < units.length - 1) {
+    v /= 1024;
+    i++;
+  }
+  return `${v.toFixed(v < 10 ? 1 : 0)} ${units[i]}`;
+}

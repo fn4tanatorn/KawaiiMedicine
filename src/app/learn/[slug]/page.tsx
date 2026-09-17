@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth/require-user";
 import { formatDuration } from "@/lib/format";
 import { alert, badge } from "@/components/ui";
 import { EmptyState } from "@/components/empty-state";
+import { FileList } from "@/components/file-list";
 
 export async function generateMetadata({
   params,
@@ -40,22 +41,28 @@ export default async function CoursePage({
     .filter((v) => v.is_published)
     .sort((a, b) => a.position - b.position);
 
-  const [{ data: progress }, { data: courseFeedback }] = await Promise.all([
-    supabase
-      .from("video_progress")
-      .select("video_id, seconds_watched, completed")
-      .eq("user_id", user.id)
-      .in(
-        "video_id",
-        videos.map((v) => v.id),
-      ),
-    supabase
-      .from("course_feedback")
-      .select("id")
-      .eq("course_id", course.id)
-      .eq("user_id", user.id)
-      .maybeSingle(),
-  ]);
+  const [{ data: progress }, { data: courseFeedback }, { data: files }] =
+    await Promise.all([
+      supabase
+        .from("video_progress")
+        .select("video_id, seconds_watched, completed")
+        .eq("user_id", user.id)
+        .in(
+          "video_id",
+          videos.map((v) => v.id),
+        ),
+      supabase
+        .from("course_feedback")
+        .select("id")
+        .eq("course_id", course.id)
+        .eq("user_id", user.id)
+        .maybeSingle(),
+      supabase
+        .from("course_files")
+        .select("id, title, size_bytes")
+        .eq("course_id", course.id)
+        .order("position"),
+    ]);
   const byVideo = new Map((progress ?? []).map((p) => [p.video_id, p]));
   const allCompleted =
     videos.length > 0 && videos.every((v) => byVideo.get(v.id)?.completed);
@@ -144,6 +151,12 @@ export default async function CoursePage({
           })}
         </ol>
       )}
+
+      <FileList
+        files={files ?? []}
+        heading="เอกสารประกอบคอร์ส"
+        className="mt-8 max-w-2xl"
+      />
     </main>
   );
 }
