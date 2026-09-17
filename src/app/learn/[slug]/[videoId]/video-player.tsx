@@ -8,6 +8,56 @@ import { btn, input } from "@/components/ui";
 const SAVE_EVERY_MS = 10_000;
 const COMPLETE_AT = 0.9;
 
+// Minimal typing for the YouTube IFrame Player API we use.
+type YTPlayer = { getCurrentTime(): number; getDuration(): number };
+type YTNamespace = {
+  Player: new (
+    el: HTMLIFrameElement,
+    opts: {
+      events: {
+        onReady: () => void;
+        onStateChange: (e: { data: number }) => void;
+      };
+    },
+  ) => YTPlayer;
+};
+declare global {
+  interface Window {
+    YT?: YTNamespace;
+    onYouTubeIframeAPIReady?: () => void;
+  }
+}
+const YT_ENDED = 0;
+const YT_PLAYING = 1;
+const YT_PAUSED = 2;
+
+let youtubeApi: Promise<YTNamespace> | null = null;
+function loadYouTubeApi(): Promise<YTNamespace> {
+  if (window.YT?.Player) return Promise.resolve(window.YT);
+  youtubeApi ??= new Promise((resolve) => {
+    const prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      prev?.();
+      resolve(window.YT!);
+    };
+    const script = document.createElement("script");
+    script.src = "https://www.youtube.com/iframe_api";
+    document.head.appendChild(script);
+  });
+  return youtubeApi;
+}
+
+/** enablejsapi lets the IFrame API attach; start resumes an unfinished video. */
+function youtubeEmbedSrc(id: string, resumeAt: number) {
+  const params = new URLSearchParams({
+    rel: "0",
+    modestbranding: "1",
+    enablejsapi: "1",
+  });
+  if (resumeAt > 0) params.set("start", String(Math.floor(resumeAt)));
+  return `https://www.youtube-nocookie.com/embed/${id}?${params}`;
+}
+
 type Props = {
   videoId: string;
   source:
@@ -35,7 +85,10 @@ export function VideoPlayer({
   courseHref,
 }: Props) {
   const ref = useRef<HTMLVideoElement>(null);
+  const ytFrame = useRef<HTMLIFrameElement>(null);
+  const ytPlayer = useRef<YTPlayer | null>(null);
   const lastSave = useRef(0);
+  const completedRef = useRef(initialCompleted);
   const [completed, setCompleted] = useState(initialCompleted);
   const [saving, setSaving] = useState(false);
 
@@ -47,33 +100,43 @@ export function VideoPlayer({
       completed: done,
     });
     setSaving(false);
-    if (res.ok && done) setCompleted(true);
+    if (res.ok && done) {
+      completedRef.current = true;
+      setCompleted(true);
+    }
+  }
+
+  const reached = (current: number, duration: number) =>
+    duration > 0 && current / duration >= COMPLETE_AT;
+
+  /** While playing: save every SAVE_EVERY_MS, or right away on reaching COMPLETE_AT. */
+  function onPlaying(current: number, duration: number) {
+    const now = Date.now();
+    const done = reached(current, duration);
+    if (
+      now - lastSave.current > SAVE_EVERY_MS ||
+      (done && !completedRef.current)
+    ) {
+      lastSave.current = now;
+      void persist(current, done);
+    }
+  }
+
+  function onPaused(current: number, duration: number) {
+    lastSave.current = Date.now();
+    void persist(current, reached(current, duration));
   }
 
   useEffect(() => {
     const el = ref.current;
-    if (!el || source.kind !== "file") return;
+    if (!el || source.kind === "youtube") return;
 
     const onLoaded = () => {
       if (initialSeconds > 0 && initialSeconds < el.duration - 5)
         el.currentTime = initialSeconds;
     };
-    const onTime = () => {
-      const now = Date.now();
-      const done =
-        el.duration > 0 && el.currentTime / el.duration >= COMPLETE_AT;
-      if (now - lastSave.current > SAVE_EVERY_MS || (done && !completed)) {
-        lastSave.current = now;
-        void persist(el.currentTime, done);
-      }
-    };
-    const onPause = () => {
-      lastSave.current = Date.now();
-      void persist(
-        el.currentTime,
-        el.duration > 0 && el.currentTime / el.duration >= COMPLETE_AT,
-      );
-    };
+    const onTime = () => onPlaying(el.currentTime, el.duration);
+    const onPause = () => onPaused(el.currentTime, el.duration);
     const onEnded = () => void persist(el.duration, true);
 
     el.addEventListener("loadedmetadata", onLoaded);
@@ -87,7 +150,56 @@ export function VideoPlayer({
       el.removeEventListener("ended", onEnded);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [videoId, source.kind, completed]);
+  }, [videoId, source.kind]);
+
+  // YouTube has no timeupdate event: attach the IFrame Player API to the
+  // iframe and poll while it plays. If the API script can't load (blocked,
+  // offline) the iframe still plays, just without tracking.
+  useEffect(() => {
+    const frame = ytFrame.current;
+    if (!frame || source.kind !== "youtube") return;
+
+    let cancelled = false;
+    let poll: ReturnType<typeof setInterval> | undefined;
+    const stopPolling = () => clearInterval(poll);
+
+    loadYouTubeApi().then((YT) => {
+      if (cancelled) return;
+      const player = new YT.Player(frame, {
+        events: {
+          // Methods like getCurrentTime only exist once the player is ready.
+          onReady: () => {
+            if (!cancelled) ytPlayer.current = player;
+          },
+          onStateChange: (e) => {
+            const t = player.getCurrentTime();
+            const d = player.getDuration();
+            stopPolling();
+            if (e.data === YT_PLAYING) {
+              poll = setInterval(
+                () => onPlaying(player.getCurrentTime(), player.getDuration()),
+                1000,
+              );
+            } else if (e.data === YT_PAUSED) {
+              onPaused(t, d);
+            } else if (e.data === YT_ENDED) {
+              void persist(d, true);
+            }
+          },
+        },
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      stopPolling();
+      ytPlayer.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videoId, source.kind]);
+
+  const currentTime = () =>
+    ytPlayer.current?.getCurrentTime() ?? ref.current?.currentTime ?? 0;
 
   const showFeedbackNudge = completed && isLastVideo && !hasCourseFeedback;
 
@@ -106,7 +218,11 @@ export function VideoPlayer({
         )}
         {source.kind === "youtube" && (
           <iframe
-            src={`https://www.youtube-nocookie.com/embed/${source.id}?rel=0&modestbranding=1`}
+            ref={ytFrame}
+            src={youtubeEmbedSrc(
+              source.id,
+              initialCompleted ? 0 : initialSeconds,
+            )}
             title="วิดีโอบทเรียน"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
@@ -137,7 +253,7 @@ export function VideoPlayer({
           {!completed && (
             <button
               type="button"
-              onClick={() => persist(ref.current?.currentTime ?? 0, true)}
+              onClick={() => persist(currentTime(), true)}
               className={btn.secondary}
             >
               ทำเครื่องหมายว่าดูจบแล้ว
