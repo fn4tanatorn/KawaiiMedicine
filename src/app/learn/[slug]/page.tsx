@@ -2,10 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth/require-user";
-import { formatDuration } from "@/lib/format";
-import { alert, badge } from "@/components/ui";
+import { formatDuration, pct } from "@/lib/format";
+import { alert, badge, card } from "@/components/ui";
 import { EmptyState } from "@/components/empty-state";
 import { FileList } from "@/components/file-list";
+
+/** The pace, informally agreed with students, at which a new video goes
+ *  out once the class-wide average completion for the course reaches it. */
+const PACE_TARGET_PCT = 60;
 
 export async function generateMetadata({
   params,
@@ -41,32 +45,42 @@ export default async function CoursePage({
     .filter((v) => v.is_published)
     .sort((a, b) => a.position - b.position);
 
-  const [{ data: progress }, { data: courseFeedback }, { data: files }] =
-    await Promise.all([
-      supabase
-        .from("video_progress")
-        .select("video_id, seconds_watched, completed")
-        .eq("user_id", user.id)
-        .in(
-          "video_id",
-          videos.map((v) => v.id),
-        ),
-      supabase
-        .from("course_feedback")
-        .select("id")
-        .eq("course_id", course.id)
-        .eq("user_id", user.id)
-        .maybeSingle(),
-      supabase
-        .from("course_files")
-        .select("id, title, size_bytes")
-        .eq("course_id", course.id)
-        .order("position"),
-    ]);
+  const [
+    { data: progress },
+    { data: courseFeedback },
+    { data: files },
+    { data: paceRows },
+  ] = await Promise.all([
+    supabase
+      .from("video_progress")
+      .select("video_id, seconds_watched, completed")
+      .eq("user_id", user.id)
+      .in(
+        "video_id",
+        videos.map((v) => v.id),
+      ),
+    supabase
+      .from("course_feedback")
+      .select("id")
+      .eq("course_id", course.id)
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("course_files")
+      .select("id, title, size_bytes")
+      .eq("course_id", course.id)
+      .order("position"),
+    supabase.rpc("get_course_progress_pace", { p_course_id: course.id }),
+  ]);
   const byVideo = new Map((progress ?? []).map((p) => [p.video_id, p]));
   const allCompleted =
     videos.length > 0 && videos.every((v) => byVideo.get(v.id)?.completed);
   const feedbackGiven = Boolean(courseFeedback);
+  const pace = paceRows?.[0];
+  const paceInfo =
+    pace && pace.published_videos > 0
+      ? { ...pace, pct: pct(pace.avg_completed, pace.published_videos) }
+      : null;
 
   return (
     <main>
@@ -85,6 +99,34 @@ export default async function CoursePage({
         <p className="mt-2 max-w-2xl whitespace-pre-line text-ink-2">
           {course.description}
         </p>
+      )}
+
+      {paceInfo && (
+        <div className={`mt-4 max-w-md ${card}`}>
+          <p className="text-sm text-ink-2">
+            เพื่อนๆ ในคอร์สนี้ดูจบเฉลี่ยแล้ว
+          </p>
+          <p className="mt-1 flex items-baseline gap-2">
+            <span className="text-2xl font-semibold">{paceInfo.pct}%</span>
+            <span className="text-sm text-ink-2">
+              ({paceInfo.avg_completed} / {paceInfo.published_videos} คลิป)
+            </span>
+          </p>
+          <div className="relative mt-3 h-2 rounded-full bg-surface-2">
+            <div
+              className="h-2 rounded-full bg-mint"
+              style={{ width: `${Math.min(paceInfo.pct, 100)}%` }}
+            />
+            <div
+              className="absolute top-0 h-2 w-0.5 bg-ink-2/40"
+              style={{ left: `${PACE_TARGET_PCT}%` }}
+              aria-hidden
+            />
+          </div>
+          <p className="mt-1.5 text-xs text-ink-2">
+            คลิปใหม่จะลงเมื่อค่าเฉลี่ยถึง {PACE_TARGET_PCT}%
+          </p>
+        </div>
       )}
 
       {sp.feedback === "thanks" && (
