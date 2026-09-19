@@ -35,7 +35,7 @@ export default async function CoursePage({
   const { data: course } = await supabase
     .from("courses")
     .select(
-      "id, slug, title, description, is_published, videos(id, title, duration_seconds, position, is_published)",
+      "id, slug, title, description, is_published, videos(id, title, description, duration_seconds, position, is_published)",
     )
     .eq("slug", slug)
     .maybeSingle();
@@ -164,7 +164,7 @@ export default async function CoursePage({
               <li key={v.id}>
                 <Link
                   href={`/learn/${course.slug}/${v.id}`}
-                  className="flex items-center gap-4 px-5 py-4 hover:bg-surface-2"
+                  className="flex items-start gap-4 px-5 py-4 hover:bg-surface-2"
                 >
                   <span
                     className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-medium ${
@@ -176,15 +176,20 @@ export default async function CoursePage({
                   >
                     {p?.completed ? "✓" : i + 1}
                   </span>
-                  <span className="flex-1">
+                  <span className="min-w-0 flex-1">
                     <span className="block font-medium">{v.title}</span>
+                    {v.description && (
+                      <span className="mt-0.5 block line-clamp-2 text-sm text-ink-2">
+                        {v.description}
+                      </span>
+                    )}
                     {p && !p.completed && p.seconds_watched > 0 && (
                       <span className="block text-xs text-ink-2">
                         ดูค้างไว้ที่ {formatDuration(p.seconds_watched)}
                       </span>
                     )}
                   </span>
-                  <span className="text-sm text-ink-2">
+                  <span className="mt-0.5 shrink-0 text-sm text-ink-2">
                     {formatDuration(v.duration_seconds)}
                   </span>
                 </Link>
