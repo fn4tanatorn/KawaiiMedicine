@@ -777,7 +777,10 @@ export type Database = {
       }
       get_course_progress_pace: {
         Args: { p_course_id: string }
-        Returns: { avg_completed: number; published_videos: number }[]
+        Returns: {
+          avg_completed: number
+          published_videos: number
+        }[]
       }
       get_my_streak: {
         Args: never
