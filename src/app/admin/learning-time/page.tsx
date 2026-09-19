@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { requireStaff } from "@/lib/auth/require-user";
 import { card, input } from "@/components/ui";
 import { EmptyState } from "@/components/empty-state";
+import { pct } from "@/lib/format";
 
 export const metadata: Metadata = { title: "เวลาเรียนต่อวิดีโอ" };
 
@@ -47,9 +48,6 @@ function published(iso: string | null) {
     </>
   );
 }
-
-const pct = (n: number, total: number) =>
-  total > 0 ? Math.round((n / total) * 100) : 0;
 
 export default async function AdminLearningTimePage({
   searchParams,

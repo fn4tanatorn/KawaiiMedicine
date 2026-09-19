@@ -24,6 +24,11 @@ export function formatScore(score: number | null | undefined): string {
   return `${Number(score).toFixed(Number.isInteger(Number(score)) ? 0 : 2)}%`;
 }
 
+/** `n` as a whole-number percentage of `total` (0 if `total` is 0). */
+export function pct(n: number, total: number): number {
+  return total > 0 ? Math.round((n / total) * 100) : 0;
+}
+
 /** Turn free text into a URL-safe slug. Keeps Thai characters. */
 export function slugify(input: string): string {
   return input
