@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireStaff } from "@/lib/auth/require-user";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { slugify } from "@/lib/format";
 import { fromBangkokLocalInput } from "@/lib/exam-status";
 import type { Database } from "@/lib/supabase/database.types";
@@ -750,6 +751,56 @@ export async function updateUserRole(formData: FormData) {
   if (error) redirect(withMsg("/admin/users", "error", "บันทึกไม่สำเร็จ"));
   revalidatePath("/admin/users");
   redirect(withMsg("/admin/users", "ok", "เปลี่ยนบทบาทแล้ว"));
+}
+
+/**
+ * Permanently deletes a user from Supabase Auth. Every row that belongs to
+ * them (progress, learning time, attempts, answers, feedback, streaks) hangs
+ * off `profiles.id` with `on delete cascade`, so this single call also removes
+ * them from every class-wide statistic and export. Courses and exams they
+ * authored survive with `created_by` set to null.
+ */
+export async function deleteUser(formData: FormData) {
+  const { role, user } = await requireStaff("/admin/users");
+  if (role !== "admin")
+    redirect(withMsg("/admin/users", "error", "เฉพาะผู้ดูแลระบบเท่านั้น"));
+
+  const id = str(formData, "id");
+  if (!id) redirect(withMsg("/admin/users", "error", "ไม่พบผู้ใช้"));
+  if (id === user.id)
+    redirect(withMsg("/admin/users", "error", "ไม่สามารถลบบัญชีตัวเองได้"));
+
+  const admin = createAdminClient();
+
+  // Never let the last admin (or an admin deleting a peer by accident) go.
+  const { data: target } = await admin
+    .from("profiles")
+    .select("role, email")
+    .eq("id", id)
+    .single();
+  if (!target) redirect(withMsg("/admin/users", "error", "ไม่พบผู้ใช้"));
+  if (target.role === "admin")
+    redirect(
+      withMsg(
+        "/admin/users",
+        "error",
+        "ลบผู้ดูแลระบบไม่ได้ กรุณาเปลี่ยนบทบาทเป็นผู้เรียนก่อน",
+      ),
+    );
+
+  // Typed confirmation from the form must match the account being deleted.
+  const confirm = str(formData, "confirm").toLowerCase();
+  if (confirm !== (target.email ?? "").toLowerCase())
+    redirect(withMsg("/admin/users", "error", "อีเมลยืนยันไม่ตรงกัน"));
+
+  const { error } = await admin.auth.admin.deleteUser(id);
+  if (error) redirect(withMsg("/admin/users", "error", "ลบบัญชีไม่สำเร็จ"));
+
+  revalidatePath("/admin/users");
+  revalidatePath("/admin");
+  redirect(
+    withMsg("/admin/users", "ok", `ลบบัญชี ${target.email ?? ""} แล้ว`),
+  );
 }
 
 // ---------------------------------------------------------------------------
