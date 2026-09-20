@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { requireStaff } from "@/lib/auth/require-user";
 import { formatDateTime } from "@/lib/format";
-import { badge, input } from "@/components/ui";
+import { badge, btn, input } from "@/components/ui";
 import { Flash } from "@/components/flash";
-import { updateUserRole } from "../actions";
+import { deleteUser, updateUserRole } from "../actions";
 
 export const metadata: Metadata = { title: "ผู้ใช้" };
 
@@ -46,6 +46,7 @@ export default async function AdminUsersPage({
               <th className="px-4 py-2 font-medium">LINE</th>
               <th className="px-4 py-2 font-medium">สมัครเมื่อ</th>
               <th className="px-4 py-2 font-medium">บทบาท</th>
+              <th className="px-4 py-2 font-medium">จัดการ</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
@@ -105,6 +106,41 @@ export default async function AdminUsersPage({
                     >
                       {ROLE_LABEL[u.role]}
                     </span>
+                  )}
+                </td>
+                <td className="px-4 py-2">
+                  {isAdmin && u.id !== user.id && u.role !== "admin" ? (
+                    <details className="group">
+                      <summary className="cursor-pointer list-none text-xs font-medium text-danger underline-offset-4 hover:underline">
+                        ลบบัญชี
+                      </summary>
+                      <form
+                        action={deleteUser}
+                        className="mt-2 w-64 space-y-2 rounded-xl border border-danger/30 bg-danger-soft p-3"
+                      >
+                        <input type="hidden" name="id" value={u.id} />
+                        <p className="text-xs text-ink-2">
+                          ลบถาวร กู้คืนไม่ได้ ข้อมูลการเรียน เวลาเรียน ผลสอบ และ
+                          feedback ของคนนี้จะถูกลบออกจากสถิติทั้งหมด
+                          พิมพ์อีเมลเพื่อยืนยัน
+                        </p>
+                        <input
+                          name="confirm"
+                          required
+                          autoComplete="off"
+                          placeholder={u.email ?? "อีเมล"}
+                          className={`${input} py-1 text-xs`}
+                        />
+                        <button
+                          type="submit"
+                          className={`${btn.danger} w-full py-1.5 text-xs`}
+                        >
+                          ลบถาวร
+                        </button>
+                      </form>
+                    </details>
+                  ) : (
+                    <span className="text-muted">-</span>
                   )}
                 </td>
               </tr>
