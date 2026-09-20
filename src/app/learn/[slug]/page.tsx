@@ -77,8 +77,9 @@ export default async function CoursePage({
     videos.length > 0 && videos.every((v) => byVideo.get(v.id)?.completed);
   const feedbackGiven = Boolean(courseFeedback);
   const pace = paceRows?.[0];
+  // avg_completed is null until at least one student has started the course.
   const paceInfo =
-    pace && pace.published_videos > 0
+    pace && pace.published_videos > 0 && pace.active_students > 0
       ? { ...pace, pct: pct(pace.avg_completed, pace.published_videos) }
       : null;
 
@@ -124,7 +125,8 @@ export default async function CoursePage({
             />
           </div>
           <p className="mt-1.5 text-xs text-ink-2">
-            คลิปใหม่จะลงเมื่อค่าเฉลี่ยถึง {PACE_TARGET_PCT}%
+            คลิปใหม่จะลงเมื่อค่าเฉลี่ยถึง {PACE_TARGET_PCT}% · นับเฉพาะผู้เรียนที่
+            เริ่มเรียนคอร์สนี้แล้ว {paceInfo.active_students} คน
           </p>
         </div>
       )}
