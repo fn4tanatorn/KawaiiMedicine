@@ -1,3 +1,6 @@
+// Hard build-time guard: importing this module from a Client Component fails
+// the build instead of shipping the service-role key to the browser.
+import "server-only";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types";
 
