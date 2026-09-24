@@ -6,7 +6,9 @@ import { EmptyState } from "@/components/empty-state";
 import { PageTitle } from "@/components/page-title";
 import { IconTarget } from "@/components/icons";
 import { IdentifyRunner } from "./identify-runner";
-import { loadIdQuestion } from "./question";
+import { cookies } from "next/headers";
+import { loadIdQuestion, STUDENT_MODE_COOKIE } from "./question";
+import { setStudentMode } from "./actions";
 
 export const metadata: Metadata = { title: "Identify" };
 
@@ -18,16 +20,18 @@ export default async function IdentifyPage({
   const one = (v: string | string[] | undefined) =>
     typeof v === "string" ? v : undefined;
 
-  const [{ data: quotaRows }, profile] = await Promise.all([
-    supabase.rpc("id_quota"),
-    getProfile(user.id),
-  ]);
+  const [profile, jar] = await Promise.all([getProfile(user.id), cookies()]);
   const isStaff = profile?.role === "admin" || profile?.role === "instructor";
+  const studentMode = isStaff && jar.get(STUDENT_MODE_COOKIE)?.value === "1";
+  const { data: quotaRows } = await supabase.rpc(
+    "id_quota",
+    studentMode ? { p_as_student: true } : {},
+  );
   const limit = quotaRows?.[0]?.daily_limit ?? null;
   const used = quotaRows?.[0]?.used ?? 0;
   const remaining = limit === null ? null : Math.max(limit - used, 0);
   // Students never choose; staff may force a card (?card=) to test it.
-  const staffCard = isStaff ? one(sp.card) : undefined;
+  const staffCard = isStaff && !studentMode ? one(sp.card) : undefined;
   const playing = one(sp.play) === "1" || !!staffCard;
 
   const header = (
@@ -37,6 +41,22 @@ export default async function IdentifyPage({
       title="Identify"
       subtitle="ดูรูปแล้วพิมพ์ชื่อโครงสร้างตามหมายเลข"
     />
+  );
+  const modeToggle = isStaff && (
+    <form
+      action={setStudentMode}
+      className={`flex flex-wrap items-center gap-3 text-sm ${studentMode ? alert.warn : "text-ink-2"}`}
+    >
+      <input type="hidden" name="on" value={studentMode ? "0" : "1"} />
+      <span className="flex-1">
+        {studentMode
+          ? "โหมดผู้เรียน: เห็นเฉพาะข้อที่เปิดแล้ว และจำกัดจำนวนข้อต่อวันเหมือนนักศึกษา"
+          : "โหมดผู้สอน: เห็นทุกข้อรวมข้อที่ซ่อน และไม่จำกัดจำนวน"}
+      </span>
+      <button className={btn.secondary}>
+        {studentMode ? "กลับเป็นโหมดผู้สอน" : "ลองแบบผู้เรียน"}
+      </button>
+    </form>
   );
   const limitMsg = (
     <p className={alert.warn}>
@@ -51,6 +71,7 @@ export default async function IdentifyPage({
     return (
       <main className="space-y-6">
         {header}
+        {modeToggle}
         {limitMsg}
       </main>
     );
@@ -60,6 +81,7 @@ export default async function IdentifyPage({
     return (
       <main className="space-y-6">
         {header}
+        {modeToggle}
         <div className={`${card} space-y-4 text-center`}>
           <p className="text-ink-2">
             ระบบจะสุ่มข้อให้ เน้นข้อที่เคยตอบผิด ทบทวนข้อที่เพิ่งจำได้
@@ -78,11 +100,12 @@ export default async function IdentifyPage({
     );
   }
 
-  const first = await loadIdQuestion(supabase, staffCard);
+  const first = await loadIdQuestion(supabase, staffCard, studentMode);
 
   return (
     <main className="space-y-6">
       {header}
+      {modeToggle}
       {first.kind === "question" ? (
         <IdentifyRunner
           initialQuestion={first.question}
