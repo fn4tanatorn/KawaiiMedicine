@@ -158,6 +158,18 @@
   --shadow-pop: var(--shadow-pop);
 }
 
+/* Topic icons are navy line art, which disappears on a dark soft tint. In dark
+   mode the tile becomes a light pastel of its accent (the tile's text color)
+   so the icon stays readable. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .topic-tile {
+    background-color: color-mix(in srgb, currentColor 32%, #fff);
+  }
+}
+:root[data-theme="dark"] .topic-tile {
+  background-color: color-mix(in srgb, currentColor 32%, #fff);
+}
+
 html {
   color-scheme: light dark;
 }
