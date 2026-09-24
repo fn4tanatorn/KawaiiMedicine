@@ -63,7 +63,7 @@ export function TopicIcon({
   const src = title ? topicIconFor(title, index) : topicIconSrc(index);
   return (
     <span
-      className={`flex shrink-0 items-center justify-center rounded-2xl ${tint.bg} ${className}`}
+      className={`topic-tile flex shrink-0 items-center justify-center rounded-2xl ${tint.bg} ${tint.text} ${className}`}
       style={{ width: size, height: size }}
     >
       <Image
