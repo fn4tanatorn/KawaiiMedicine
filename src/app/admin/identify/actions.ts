@@ -70,15 +70,19 @@ export type IdCheckResult = {
 
 export async function checkIdCard(
   cardId: string,
-  answers: Record<string, string>,
+  labelNo: number,
+  answer: string,
 ): Promise<
-  { ok: true; results: IdCheckResult } | { ok: false; error: string }
+  { ok: true; result: IdCheckResult[number] } | { ok: false; error: string }
 > {
   const { supabase } = await requireAdmin("/admin/identify/play");
   const { data, error } = await supabase.rpc("check_id_card", {
     p_card_id: cardId,
-    p_answers: answers,
+    p_answers: { [labelNo]: answer },
   });
   if (error || !data) return { ok: false, error: "ตรวจคำตอบไม่สำเร็จ" };
-  return { ok: true, results: data };
+  // Return only the asked label so other answers never reach the browser.
+  const result = data.find((r) => r.label_no === labelNo);
+  if (!result) return { ok: false, error: "ไม่พบหมายเลขนี้" };
+  return { ok: true, result };
 }
