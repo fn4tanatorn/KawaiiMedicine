@@ -74,6 +74,7 @@
   (Asia/Bangkok), 10 ข้อ/วัน เมื่อดูวิดีโอที่เผยแพร่ครบทุกคลิป, staff ไม่จำกัด.
   ตาราง `id_cards`, `id_card_labels` (staff-only), `id_answers` (log/นับโควต้า);
   `id_pending`; RPC `id_quota()`, `next_id_question()`, `answer_id_label()`
+  Admin กรองข้อตามระบบอวัยวะ (หรือ "ยังไม่ติดระบบ") / สถานะเปิด-ซ่อน และลบทีละข้อได้
 
 ## Phase 7 — Medium effort, impact สูงสุดจาก survey
 

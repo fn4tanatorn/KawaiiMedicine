@@ -86,18 +86,30 @@ function cleanIds(ids: unknown[]) {
   ];
 }
 
+/** Where to go back to after a label action: same filters, same card. */
+function backTo(formData: FormData, cardId: string, msg: string, ok: boolean) {
+  const qs = new URLSearchParams(formData.get("back")?.toString() ?? "");
+  qs.delete("ok");
+  qs.delete("error");
+  qs.set(ok ? "ok" : "error", msg);
+  return `/admin/identify?${qs}#card-${cardId}`;
+}
+
 /**
- * Save every label on one card: which are open to students (checkboxes named
- * `open`, value = label id) and each label's tags (checkboxes named
+ * Save the labels shown on one card (hidden inputs `label_id`; labels hidden
+ * by the filter are left untouched): which are open to students (checkboxes
+ * named `open`, value = label id) and each label's tags (checkboxes named
  * `organ_system:<label_id>`).
  */
 export async function saveCardLabels(formData: FormData) {
   const { supabase } = await requireAdmin("/admin/identify");
   const cardId = formData.get("card_id")?.toString() ?? "";
+  const shown = formData.getAll("label_id").map(String);
   const { data: labels } = await supabase
     .from("id_card_labels")
     .select("id")
-    .eq("card_id", cardId);
+    .eq("card_id", cardId)
+    .in("id", shown);
   const labelIds = (labels ?? []).map((l) => l.id);
   const rows = labelIds.flatMap((label_id) =>
     cleanIds(formData.getAll(`organ_system:${label_id}`)).map(
@@ -132,15 +144,42 @@ export async function saveCardLabels(formData: FormData) {
       : { error: null },
   ]);
   revalidatePath("/admin/identify");
+  const failed = !!(insErr || openErr || closeErr);
   redirect(
-    "/admin/identify?" +
-      (insErr || openErr || closeErr
-        ? "error=" + encodeURIComponent("บันทึกไม่สำเร็จ")
-        : "ok=" +
-          encodeURIComponent(
-            `บันทึกแล้ว · เปิด ${openIds.length}/${labelIds.length} ข้อ`,
-          )) +
-      `#card-${cardId}`,
+    backTo(
+      formData,
+      cardId,
+      failed
+        ? "บันทึกไม่สำเร็จ"
+        : `บันทึกแล้ว · เปิด ${openIds.length}/${labelIds.length} ข้อ`,
+      !failed,
+    ),
+  );
+}
+
+/**
+ * Delete one label (question). Its tags and anyone's pending question on it
+ * go with it (FK cascade); past answers in id_answers stay for the log.
+ */
+export async function deleteIdLabel(formData: FormData) {
+  const { supabase } = await requireAdmin("/admin/identify");
+  const cardId = formData.get("card_id")?.toString() ?? "";
+  const id = formData.get("delete_label")?.toString() ?? "";
+  const { data, error } = await supabase
+    .from("id_card_labels")
+    .delete()
+    .eq("id", id)
+    .eq("card_id", cardId)
+    .select("label_no");
+  revalidatePath("/admin/identify");
+  const ok = !error && !!data?.length;
+  redirect(
+    backTo(
+      formData,
+      cardId,
+      ok ? `ลบข้อ ${data[0].label_no} แล้ว` : "ลบข้อไม่สำเร็จ",
+      ok,
+    ),
   );
 }
 
