@@ -6,7 +6,7 @@ import { badge, btn } from "@/components/ui";
 import { Flash } from "@/components/flash";
 import { EmptyState } from "@/components/empty-state";
 import { ConfirmButton } from "@/components/confirm-button";
-import { deleteIdCard } from "./actions";
+import { deleteIdCard, setIdCardPublished } from "./actions";
 import { CardForm } from "./card-form";
 
 export const metadata: Metadata = { title: "Identify typing (beta)" };
@@ -18,7 +18,9 @@ export default async function IdentifyAdminPage({
   const { supabase } = await requireAdmin("/admin/identify");
   const { data: cards } = await supabase
     .from("id_cards")
-    .select("id, title, subject, image_path, id_card_labels(label_no, answer)")
+    .select(
+      "id, title, subject, image_path, is_published, id_card_labels(label_no, answer)",
+    )
     .order("created_at", { ascending: false });
   const urls = await signQuestionImages(
     supabase,
@@ -29,8 +31,8 @@ export default async function IdentifyAdminPage({
     <main className="space-y-8">
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-semibold">Identify typing</h1>
-        <span className={badge.pink}>Beta · admin only</span>
-        <Link href="/admin/identify/play" className={`${btn.primary} ml-auto`}>
+        <span className={badge.pink}>Beta</span>
+        <Link href="/identify" className={`${btn.primary} ml-auto`}>
           เริ่มเล่น (สุ่มการ์ด)
         </Link>
       </div>
@@ -62,6 +64,11 @@ export default async function IdentifyAdminPage({
                     <div className="flex items-center gap-2">
                       <span className="flex-1 font-medium">{c.title}</span>
                       <span className={badge.blue}>{c.subject}</span>
+                      <span
+                        className={c.is_published ? badge.green : badge.gray}
+                      >
+                        {c.is_published ? "เผยแพร่" : "ร่าง"}
+                      </span>
                     </div>
                     <details className="text-sm text-ink-2">
                       <summary className="cursor-pointer">
@@ -77,13 +84,24 @@ export default async function IdentifyAdminPage({
                           ))}
                       </ol>
                     </details>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Link
-                        href={`/admin/identify/play?card=${c.id}`}
+                        href={`/identify?card=${c.id}`}
                         className={btn.secondary}
                       >
                         เล่นการ์ดนี้
                       </Link>
+                      <form action={setIdCardPublished}>
+                        <input type="hidden" name="id" value={c.id} />
+                        <input
+                          type="hidden"
+                          name="publish"
+                          value={String(!c.is_published)}
+                        />
+                        <button className={btn.secondary}>
+                          {c.is_published ? "ซ่อน" : "เผยแพร่"}
+                        </button>
+                      </form>
                       <form action={deleteIdCard}>
                         <input type="hidden" name="id" value={c.id} />
                         <ConfirmButton

@@ -427,6 +427,54 @@ export type Database = {
           },
         ]
       }
+      id_answers: {
+        Row: {
+          answered_at: string
+          answered_on: string
+          card_id: string
+          given: string
+          id: string
+          is_correct: boolean
+          label_no: number
+          user_id: string
+        }
+        Insert: {
+          answered_at?: string
+          answered_on?: string
+          card_id: string
+          given: string
+          id?: string
+          is_correct: boolean
+          label_no: number
+          user_id: string
+        }
+        Update: {
+          answered_at?: string
+          answered_on?: string
+          card_id?: string
+          given?: string
+          id?: string
+          is_correct?: boolean
+          label_no?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "id_answers_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "id_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "id_answers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       id_card_labels: {
         Row: {
           answer: string
@@ -816,18 +864,20 @@ export type Database = {
       }
     }
     Functions: {
-      answer_distance: {
-        Args: { p_answer: string; p_key: string }
-        Returns: number
-      }
-      check_id_card: {
-        Args: { p_answers: Json; p_card_id: string }
+      answer_id_label: {
+        Args: { p_answer: string; p_card_id: string; p_label_no: number }
         Returns: {
           answer: string
+          daily_limit: number | null
           given: string
           is_correct: boolean
           label_no: number
+          used: number
         }[]
+      }
+      answer_distance: {
+        Args: { p_answer: string; p_key: string }
+        Returns: number
       }
       current_user_email: { Args: never; Returns: string }
       current_user_role: {
@@ -836,6 +886,12 @@ export type Database = {
       }
       exam_is_open: { Args: { p_exam_id: string }; Returns: boolean }
       fuzzy_tolerance: { Args: { p_norm_key: string }; Returns: number }
+      id_card_label_nos: { Args: { p_card_id: string }; Returns: number[] }
+      id_daily_limit: { Args: never; Returns: number | null }
+      id_quota: {
+        Args: never
+        Returns: { daily_limit: number | null; used: number }[]
+      }
       get_attempt_review: {
         Args: { p_attempt_id: string }
         Returns: {

@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { AnswerDiff } from "@/components/answer-diff";
 import { btn, card, input } from "@/components/ui";
-import { checkIdCard, type IdCheckResult } from "../actions";
+import { answerIdLabel, type IdAnswerResult } from "./actions";
 
 /** One randomly ordered label at a time; order is shuffled by the server page. */
 export function SingleRunner({
@@ -13,21 +13,31 @@ export function SingleRunner({
   title,
   order,
   nextHref,
+  initialLimit,
+  initialUsed,
 }: {
   cardId: string;
   imageUrl: string | null;
   title: string;
   order: number[];
   nextHref: string;
+  /** null = unlimited (staff). */
+  initialLimit: number | null;
+  initialUsed: number;
 }) {
   const [step, setStep] = useState(0);
   const [value, setValue] = useState("");
-  const [result, setResult] = useState<IdCheckResult[number] | null>(null);
-  const [history, setHistory] = useState<IdCheckResult>([]);
+  const [result, setResult] = useState<IdAnswerResult | null>(null);
+  const [history, setHistory] = useState<IdAnswerResult[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [used, setUsed] = useState(initialUsed);
+  const [limitHit, setLimitHit] = useState(false);
+  const remaining =
+    initialLimit === null ? null : Math.max(initialLimit - used, 0);
   const inputRef = useRef<HTMLInputElement>(null);
-  const done = step >= order.length;
+  // Out of quota ends the card early, but only after the current answer is shown.
+  const done = step >= order.length || limitHit || (remaining === 0 && !result);
   const no = order[step];
   const score = history.filter((r) => r.is_correct).length;
 
@@ -36,10 +46,14 @@ export function SingleRunner({
     if (result) return next();
     setBusy(true);
     setError(null);
-    const res = await checkIdCard(cardId, no, value);
+    const res = await answerIdLabel(cardId, no, value);
     setBusy(false);
-    if (!res.ok) return setError(res.error);
+    if (!res.ok) {
+      if (res.limitReached) setLimitHit(true);
+      return setError(res.error);
+    }
     setResult(res.result);
+    setUsed(res.result.used);
     setHistory((h) => [...h, res.result]);
   }
 
@@ -72,19 +86,22 @@ export function SingleRunner({
           </span>
           <span>
             ถูก {score}/{history.length}
+            {remaining !== null && ` · เหลือวันนี้ ${remaining} ข้อ`}
           </span>
         </div>
         <div className="h-1.5 overflow-hidden rounded-pill bg-surface-2">
           <div
             className="h-full bg-brand transition-all"
-            style={{ width: `${(history.length / order.length) * 100}%` }}
+            style={{
+              width: `${(history.length / (order.length || 1)) * 100}%`,
+            }}
           />
         </div>
 
         {done ? (
           <div className="space-y-4">
             <p className="text-2xl font-semibold">
-              ได้ {score}/{order.length}
+              ได้ {score}/{history.length}
             </p>
             <ul className="space-y-1 text-sm">
               {[...history]
@@ -98,9 +115,18 @@ export function SingleRunner({
                   </li>
                 ))}
             </ul>
-            <Link href={nextHref} className={`${btn.primary} w-full`}>
-              การ์ดถัดไป →
-            </Link>
+            {remaining === 0 || limitHit ? (
+              <p className="text-sm text-ink-2">
+                วันนี้ทำครบ {initialLimit} ข้อแล้ว กลับมาใหม่พรุ่งนี้นะ
+                {initialLimit !== null &&
+                  initialLimit < 10 &&
+                  " · ดูวิดีโอให้ครบทุกคลิปเพื่อได้ 10 ข้อ/วัน"}
+              </p>
+            ) : (
+              <Link href={nextHref} className={`${btn.primary} w-full`}>
+                การ์ดถัดไป →
+              </Link>
+            )}
           </div>
         ) : (
           <form onSubmit={check} className="space-y-3">
@@ -138,7 +164,7 @@ export function SingleRunner({
               {busy
                 ? "กำลังตรวจ…"
                 : result
-                  ? step + 1 < order.length
+                  ? step + 1 < order.length && remaining !== 0
                     ? "ข้อต่อไป →"
                     : "ดูสรุป"
                   : "ตรวจ"}
