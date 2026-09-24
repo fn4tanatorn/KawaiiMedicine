@@ -4,7 +4,6 @@ import { requireAdmin } from "@/lib/auth/require-user";
 import { signQuestionImages } from "@/lib/storage";
 import { badge, btn, input } from "@/components/ui";
 import { EmptyState } from "@/components/empty-state";
-import { IdentifyRunner } from "./identify-runner";
 import { SingleRunner } from "./single-runner";
 
 export const metadata: Metadata = { title: "Identify typing (beta)" };
@@ -34,7 +33,6 @@ export default async function IdentifyPlayPage({
     typeof v === "string" ? v : undefined;
   const subject = SUBJECTS.find((s) => s === one(sp.subject));
   const prev = one(sp.prev);
-  const mode = one(sp.mode) === "all" ? "all" : "single";
   let cardId = one(sp.card);
 
   if (!cardId) {
@@ -64,20 +62,10 @@ export default async function IdentifyPlayPage({
   }
 
   const urls = await signQuestionImages(supabase, [card.image_path]);
-  const labelNos = card.id_card_labels
-    .map((l) => l.label_no)
-    .sort((a, b) => a - b);
-  const qs = (extra: Record<string, string>) => {
-    const p = new URLSearchParams(extra);
-    if (subject) p.set("subject", subject);
-    if (mode === "all") p.set("mode", "all");
-    return `/admin/identify/play?${p}`;
-  };
-  const nextHref = qs({ prev: card.id });
-  const otherModeHref = `/admin/identify/play?${new URLSearchParams({
-    card: card.id,
+  const labelNos = card.id_card_labels.map((l) => l.label_no);
+  const nextHref = `/admin/identify/play?${new URLSearchParams({
+    prev: card.id,
     ...(subject ? { subject } : {}),
-    ...(mode === "single" ? { mode: "all" } : {}),
   })}`;
 
   return (
@@ -88,38 +76,23 @@ export default async function IdentifyPlayPage({
         </Link>
         <h1 className="text-xl font-semibold">{card.title}</h1>
         <span className={badge.blue}>{card.subject}</span>
-        <Link href={otherModeHref} className={`${btn.secondary} ml-auto`}>
-          {mode === "single" ? "ดูทั้งหมดพร้อมกัน" : "ทีละข้อ (สุ่ม)"}
-        </Link>
-        <form className=" flex gap-2" action="/admin/identify/play">
+        <form className="ml-auto flex gap-2" action="/admin/identify/play">
           <select name="subject" defaultValue={subject ?? ""} className={input}>
             <option value="">ทุกหมวด</option>
             <option value="anatomy">Anatomy</option>
             <option value="histology">Histology</option>
           </select>
-          {mode === "all" && <input type="hidden" name="mode" value="all" />}
           <button className={btn.secondary}>สุ่ม</button>
         </form>
       </div>
-      {mode === "single" ? (
-        <SingleRunner
-          key={card.id}
-          cardId={card.id}
-          imageUrl={urls.get(card.image_path) ?? null}
-          title={card.title}
-          order={shuffled(labelNos)}
-          nextHref={nextHref}
-        />
-      ) : (
-        <IdentifyRunner
-          key={card.id}
-          cardId={card.id}
-          imageUrl={urls.get(card.image_path) ?? null}
-          title={card.title}
-          labelNos={labelNos}
-          nextHref={nextHref}
-        />
-      )}
+      <SingleRunner
+        key={card.id}
+        cardId={card.id}
+        imageUrl={urls.get(card.image_path) ?? null}
+        title={card.title}
+        order={shuffled(labelNos)}
+        nextHref={nextHref}
+      />
     </main>
   );
 }

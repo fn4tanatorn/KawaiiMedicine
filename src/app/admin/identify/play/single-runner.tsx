@@ -36,12 +36,11 @@ export function SingleRunner({
     if (result) return next();
     setBusy(true);
     setError(null);
-    const res = await checkIdCard(cardId, { [no]: value }, [no]);
+    const res = await checkIdCard(cardId, no, value);
     setBusy(false);
-    if (!res.ok || !res.results[0])
-      return setError(res.ok ? "ตรวจคำตอบไม่สำเร็จ" : res.error);
-    setResult(res.results[0]);
-    setHistory((h) => [...h, res.results[0]]);
+    if (!res.ok) return setError(res.error);
+    setResult(res.result);
+    setHistory((h) => [...h, res.result]);
   }
 
   function next() {

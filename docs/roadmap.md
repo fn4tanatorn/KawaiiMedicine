@@ -63,7 +63,7 @@
 
 - [x] **Identify typing (prototype, admin-only beta)** — `/admin/identify`: อัปโหลดรูป
   Netter-style ที่มีเลขกำกับบนรูป + เฉลยบรรทัดละข้อ (`1. Frontal bone | alt`), 1 การ์ด = 1 โจทย์
-  หลายช่อง. `/admin/identify/play` สุ่มการ์ด (กรอง anatomy/histology) → พิมพ์ตอบ →
+  หลายช่อง. `/admin/identify/play` สุ่มการ์ด (กรอง anatomy/histology) → สุ่มถามทีละเลข → พิมพ์ตอบ →
   ตรวจฝั่ง server ด้วย RPC `check_id_card()` (fuzzy แบบเดียวกับข้อสอบ). ตาราง `id_cards` +
   `id_card_labels`, RLS admin-only ทั้งหมด. ยังไม่เก็บประวัติ/คะแนน; ถ้าจะเปิดให้นักเรียน
   ต้องย้ายการตรวจเป็น security definer + ห้าม student อ่าน `id_card_labels`
