@@ -1036,6 +1036,13 @@ export type Database = {
           longest_streak: number
         }[]
       }
+      get_user_last_active: {
+        Args: never
+        Returns: {
+          last_active_at: string
+          user_id: string
+        }[]
+      }
       get_video_learning_time_stats: {
         Args: { p_course_id?: string }
         Returns: {
