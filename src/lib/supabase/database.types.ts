@@ -427,6 +427,68 @@ export type Database = {
           },
         ]
       }
+      id_card_labels: {
+        Row: {
+          answer: string
+          card_id: string
+          id: string
+          label_no: number
+          synonyms: string[]
+        }
+        Insert: {
+          answer: string
+          card_id: string
+          id?: string
+          label_no: number
+          synonyms?: string[]
+        }
+        Update: {
+          answer?: string
+          card_id?: string
+          id?: string
+          label_no?: number
+          synonyms?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "id_card_labels_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "id_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      id_cards: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          image_path: string
+          is_published: boolean
+          subject: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_path: string
+          is_published?: boolean
+          subject?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_path?: string
+          is_published?: boolean
+          subject?: string
+          title?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -757,6 +819,15 @@ export type Database = {
       answer_distance: {
         Args: { p_answer: string; p_key: string }
         Returns: number
+      }
+      check_id_card: {
+        Args: { p_answers: Json; p_card_id: string }
+        Returns: {
+          answer: string
+          given: string
+          is_correct: boolean
+          label_no: number
+        }[]
       }
       current_user_email: { Args: never; Returns: string }
       current_user_role: {

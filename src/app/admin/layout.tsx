@@ -9,6 +9,7 @@ import {
   IconFlag,
   IconHome,
   IconPlay,
+  IconTarget,
   IconUsers,
 } from "@/components/icons";
 
@@ -56,6 +57,15 @@ const ADMIN_NAV = [
   },
 ];
 
+// Beta: visible to admins only (instructors don't see it yet).
+const ADMIN_ONLY_NAV = [
+  {
+    href: "/admin/identify",
+    label: "Identify (beta)",
+    icon: <IconTarget width={16} height={16} />,
+  },
+];
+
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const { user, role, fullName, lineName } = await requireStaff("/admin");
   return (
@@ -68,7 +78,12 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
       />
       <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6">
         <div className="mb-6 overflow-x-auto rounded-pill border border-line bg-surface/70 p-1 shadow-soft">
-          <NavLinks items={ADMIN_NAV} size="sm" />
+          <NavLinks
+            items={
+              role === "admin" ? [...ADMIN_NAV, ...ADMIN_ONLY_NAV] : ADMIN_NAV
+            }
+            size="sm"
+          />
         </div>
         {children}
       </div>
