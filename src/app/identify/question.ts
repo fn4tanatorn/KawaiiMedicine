@@ -16,7 +16,7 @@ export type IdQuestionResult =
   | { kind: "question"; question: IdQuestion }
   | { kind: "limit" }
   | { kind: "empty" }
-  | { kind: "error" };
+  | { kind: "error"; message: string };
 
 /**
  * The caller's current question. The DB picks it (weighted review order) and
@@ -31,16 +31,28 @@ export async function loadIdQuestion(
     cardId ? { p_card_id: cardId } : {},
   );
   if (error?.code === "P0001") return { kind: "limit" };
-  if (error) return { kind: "error" };
+  if (error) {
+    console.error("next_id_question failed", error);
+    return {
+      kind: "error",
+      message: `next_id_question: ${error.code ?? ""} ${error.message}`,
+    };
+  }
   const q = data?.[0];
   if (!q) return { kind: "empty" };
 
-  const { data: card } = await supabase
+  const { data: card, error: cardError } = await supabase
     .from("id_cards")
     .select("title, subject, is_published, image_path")
     .eq("id", q.card_id)
     .single();
-  if (!card) return { kind: "error" };
+  if (!card) {
+    console.error("id_cards lookup failed", cardError);
+    return {
+      kind: "error",
+      message: `id_cards: ${cardError?.code ?? ""} ${cardError?.message ?? "not found"}`,
+    };
+  }
   const urls = await signQuestionImages(supabase, [card.image_path]);
   return {
     kind: "question",

@@ -97,7 +97,9 @@ export default async function IdentifyPage({
           description={
             first.kind === "empty"
               ? "รอผู้สอนเพิ่มการ์ดก่อนนะ"
-              : "ลองรีเฟรชอีกครั้ง"
+              : isStaff
+                ? first.message
+                : "ลองรีเฟรชอีกครั้ง"
           }
         />
       )}
