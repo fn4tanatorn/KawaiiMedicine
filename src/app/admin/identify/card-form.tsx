@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { btn, card, input, label } from "@/components/ui";
 import { createIdCard } from "./actions";
+import { ORGAN_SYSTEMS } from "@/lib/organ-systems";
 import { parseLabelLines } from "./parse-labels";
 
 const ACCEPT = "image/jpeg,image/png,image/webp,image/gif";
 const MAX_BYTES = 10 * 1024 * 1024;
-const PLACEHOLDER = `1. Frontal bone
-2. Supraorbital notch (foramen)
-3. Nasal bone | nasal`;
+const PLACEHOLDER = `1. Frontal bone #Musculoskeletal
+2. Supraorbital notch (foramen) #Musculoskeletal
+3. Nasal bone | nasal #Musculoskeletal`;
 
 export function CardForm() {
   const router = useRouter();
@@ -21,7 +22,7 @@ export function CardForm() {
   const [labels, setLabels] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
-  const parsed = parseLabelLines(labels);
+  const { labels: parsed, badTags } = parseLabelLines(labels);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -89,7 +90,10 @@ export function CardForm() {
         />
       </label>
       <label className={label}>
-        <span>เฉลย (บรรทัดละข้อ, ใช้ | คั่นคำตอบอื่นที่รับได้)</span>
+        <span>
+          เฉลย (บรรทัดละข้อ, ใช้ | คั่นคำตอบอื่นที่รับได้, ใส่ #Organ system
+          ท้ายบรรทัด)
+        </span>
         <textarea
           className={`${input} min-h-48 font-mono`}
           value={labels}
@@ -101,7 +105,14 @@ export function CardForm() {
       <p className="text-xs text-ink-2">
         อ่านได้ {parsed.length} ตำแหน่ง
         {parsed.length > 0 && `: ${parsed.map((l) => l.label_no).join(", ")}`}
+        {` · ติด tag ${parsed.filter((l) => l.organ_system).length}`}
       </p>
+      {badTags.length > 0 && (
+        <p className="text-xs text-danger">
+          ไม่รู้จัก tag: {badTags.join(", ")}
+        </p>
+      )}
+      <p className="text-xs text-ink-2">Tag: {ORGAN_SYSTEMS.join(" · ")}</p>
       {msg && (
         <p className={msg.ok ? "text-sm text-mint" : "text-sm text-danger"}>
           {msg.text}

@@ -14,9 +14,11 @@ export async function createIdCard(input: {
   const { supabase, user } = await requireAdmin("/admin/identify");
   const title = input.title.trim();
   const subject = input.subject === "histology" ? "histology" : "anatomy";
-  const labels = parseLabelLines(input.labels);
+  const { labels, badTags } = parseLabelLines(input.labels);
   if (!title) return { ok: false, error: "กรุณากรอกชื่อการ์ด" };
   if (!input.imagePath) return { ok: false, error: "กรุณาเลือกรูป" };
+  if (badTags.length > 0)
+    return { ok: false, error: `ไม่รู้จัก tag: ${badTags.join(", ")}` };
   if (labels.length === 0)
     return {
       ok: false,

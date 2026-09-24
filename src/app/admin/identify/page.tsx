@@ -19,7 +19,7 @@ export default async function IdentifyAdminPage({
   const { data: cards } = await supabase
     .from("id_cards")
     .select(
-      "id, title, subject, image_path, is_published, id_card_labels(label_no, answer)",
+      "id, title, subject, image_path, is_published, id_card_labels(label_no, answer, organ_system)",
     )
     .order("created_at", { ascending: false });
   const urls = await signQuestionImages(
@@ -80,6 +80,11 @@ export default async function IdentifyAdminPage({
                           .map((l) => (
                             <li key={l.label_no}>
                               {l.label_no}. {l.answer}
+                              {l.organ_system && (
+                                <span className={`${badge.gray} ml-2`}>
+                                  {l.organ_system}
+                                </span>
+                              )}
                             </li>
                           ))}
                       </ol>

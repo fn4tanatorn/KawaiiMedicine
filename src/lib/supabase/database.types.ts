@@ -481,6 +481,7 @@ export type Database = {
           card_id: string
           id: string
           label_no: number
+          organ_system: string | null
           synonyms: string[]
         }
         Insert: {
@@ -488,6 +489,7 @@ export type Database = {
           card_id: string
           id?: string
           label_no: number
+          organ_system?: string | null
           synonyms?: string[]
         }
         Update: {
@@ -495,6 +497,7 @@ export type Database = {
           card_id?: string
           id?: string
           label_no?: number
+          organ_system?: string | null
           synonyms?: string[]
         }
         Relationships: [
