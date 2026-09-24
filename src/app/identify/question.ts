@@ -59,8 +59,7 @@ export async function loadIdQuestion(
     question: {
       cardId: q.card_id,
       labelNo: q.label_no,
-      // Only the topic before " — " is shown: the detail can give answers away.
-      title: card.title.split(" — ")[0].trim(),
+      title: card.title,
       subject: card.subject,
       isPublished: card.is_published,
       imageUrl: urls.get(card.image_path) ?? null,
