@@ -5,12 +5,22 @@ import { signQuestionImages } from "@/lib/storage";
 import { badge, btn, input } from "@/components/ui";
 import { EmptyState } from "@/components/empty-state";
 import { IdentifyRunner } from "./identify-runner";
+import { SingleRunner } from "./single-runner";
 
 export const metadata: Metadata = { title: "Identify typing (beta)" };
 
 /** Kept outside the component so the render body stays pure. */
 function randomItem<T>(items: T[]): T | undefined {
   return items[Math.floor(Math.random() * items.length)];
+}
+
+function shuffled<T>(items: T[]): T[] {
+  const a = [...items];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
 }
 
 const SUBJECTS = ["anatomy", "histology"] as const;
@@ -24,6 +34,7 @@ export default async function IdentifyPlayPage({
     typeof v === "string" ? v : undefined;
   const subject = SUBJECTS.find((s) => s === one(sp.subject));
   const prev = one(sp.prev);
+  const mode = one(sp.mode) === "all" ? "all" : "single";
   let cardId = one(sp.card);
 
   if (!cardId) {
@@ -56,7 +67,18 @@ export default async function IdentifyPlayPage({
   const labelNos = card.id_card_labels
     .map((l) => l.label_no)
     .sort((a, b) => a - b);
-  const nextHref = `/admin/identify/play?prev=${card.id}${subject ? `&subject=${subject}` : ""}`;
+  const qs = (extra: Record<string, string>) => {
+    const p = new URLSearchParams(extra);
+    if (subject) p.set("subject", subject);
+    if (mode === "all") p.set("mode", "all");
+    return `/admin/identify/play?${p}`;
+  };
+  const nextHref = qs({ prev: card.id });
+  const otherModeHref = `/admin/identify/play?${new URLSearchParams({
+    card: card.id,
+    ...(subject ? { subject } : {}),
+    ...(mode === "single" ? { mode: "all" } : {}),
+  })}`;
 
   return (
     <main className="space-y-6">
@@ -66,23 +88,38 @@ export default async function IdentifyPlayPage({
         </Link>
         <h1 className="text-xl font-semibold">{card.title}</h1>
         <span className={badge.blue}>{card.subject}</span>
-        <form className="ml-auto flex gap-2" action="/admin/identify/play">
+        <Link href={otherModeHref} className={`${btn.secondary} ml-auto`}>
+          {mode === "single" ? "ดูทั้งหมดพร้อมกัน" : "ทีละข้อ (สุ่ม)"}
+        </Link>
+        <form className=" flex gap-2" action="/admin/identify/play">
           <select name="subject" defaultValue={subject ?? ""} className={input}>
             <option value="">ทุกหมวด</option>
             <option value="anatomy">Anatomy</option>
             <option value="histology">Histology</option>
           </select>
+          {mode === "all" && <input type="hidden" name="mode" value="all" />}
           <button className={btn.secondary}>สุ่ม</button>
         </form>
       </div>
-      <IdentifyRunner
-        key={card.id}
-        cardId={card.id}
-        imageUrl={urls.get(card.image_path) ?? null}
-        title={card.title}
-        labelNos={labelNos}
-        nextHref={nextHref}
-      />
+      {mode === "single" ? (
+        <SingleRunner
+          key={card.id}
+          cardId={card.id}
+          imageUrl={urls.get(card.image_path) ?? null}
+          title={card.title}
+          order={shuffled(labelNos)}
+          nextHref={nextHref}
+        />
+      ) : (
+        <IdentifyRunner
+          key={card.id}
+          cardId={card.id}
+          imageUrl={urls.get(card.image_path) ?? null}
+          title={card.title}
+          labelNos={labelNos}
+          nextHref={nextHref}
+        />
+      )}
     </main>
   );
 }

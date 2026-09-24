@@ -71,6 +71,8 @@ export type IdCheckResult = {
 export async function checkIdCard(
   cardId: string,
   answers: Record<string, string>,
+  /** Only grade/return these labels (one-at-a-time mode). */
+  only?: number[],
 ): Promise<
   { ok: true; results: IdCheckResult } | { ok: false; error: string }
 > {
@@ -80,5 +82,6 @@ export async function checkIdCard(
     p_answers: answers,
   });
   if (error || !data) return { ok: false, error: "ตรวจคำตอบไม่สำเร็จ" };
-  return { ok: true, results: data };
+  const results = only ? data.filter((r) => only.includes(r.label_no)) : data;
+  return { ok: true, results };
 }
