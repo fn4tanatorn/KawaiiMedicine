@@ -59,3 +59,15 @@ export async function requireStaff(nextPath?: string) {
     lineName: profile?.line_name ?? null,
   };
 }
+
+/** Admin-only gate (e.g. beta features instructors shouldn't see yet). */
+export async function requireAdmin(nextPath?: string) {
+  const ctx = await requireStaff(nextPath);
+  if (ctx.role !== "admin") {
+    redirect(
+      "/admin?error=" +
+        encodeURIComponent("เมนูนี้เปิดให้ admin ทดสอบเท่านั้น"),
+    );
+  }
+  return ctx;
+}
