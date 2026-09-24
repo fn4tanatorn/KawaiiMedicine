@@ -510,6 +510,7 @@ export type Database = {
           answer: string
           card_id: string
           id: string
+          is_published: boolean
           label_no: number
           synonyms: string[]
         }
@@ -517,6 +518,7 @@ export type Database = {
           answer: string
           card_id: string
           id?: string
+          is_published?: boolean
           label_no: number
           synonyms?: string[]
         }
@@ -524,6 +526,7 @@ export type Database = {
           answer?: string
           card_id?: string
           id?: string
+          is_published?: boolean
           label_no?: number
           synonyms?: string[]
         }
