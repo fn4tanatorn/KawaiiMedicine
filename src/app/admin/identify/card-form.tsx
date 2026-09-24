@@ -24,6 +24,7 @@ export function CardForm({ organSystems }: { organSystems: OrganSystem[] }) {
   const [file, setFile] = useState<File | null>(null);
   const [labels, setLabels] = useState("");
   const [systemIds, setSystemIds] = useState<number[]>([]);
+  const [openAll, setOpenAll] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const parsed = parseLabelLines(labels);
@@ -51,6 +52,7 @@ export function CardForm({ organSystems }: { organSystems: OrganSystem[] }) {
       imagePath: path,
       labels,
       organSystemIds: systemIds,
+      openAll,
     });
     setBusy(false);
     if (!res.ok) {
@@ -123,6 +125,20 @@ export function CardForm({ organSystems }: { organSystems: OrganSystem[] }) {
           placeholder={PLACEHOLDER}
           required
         />
+      </label>
+      <label className="flex items-start gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={openAll}
+          onChange={(e) => setOpenAll(e.target.checked)}
+          className="mt-1"
+        />
+        <span>
+          เปิดให้นักศึกษาทำทุกข้อทันที
+          <span className="block text-xs font-normal text-ink-2">
+            ไม่ติ๊ก = ซ่อนทุกข้อไว้ก่อน แล้วเลือกเปิดทีละข้อในรายการการ์ด
+          </span>
+        </span>
       </label>
       <p className="text-xs text-ink-2">
         อ่านได้ {parsed.length} ตำแหน่ง

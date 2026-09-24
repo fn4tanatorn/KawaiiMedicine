@@ -11,6 +11,7 @@ export async function createIdCard(input: {
   imagePath: string;
   labels: string;
   organSystemIds?: number[];
+  openAll?: boolean;
 }): Promise<
   { ok: true; id: string; warning?: string } | { ok: false; error: string }
 > {
@@ -40,7 +41,13 @@ export async function createIdCard(input: {
 
   const { data: newLabels, error: lErr } = await supabase
     .from("id_card_labels")
-    .insert(labels.map((l) => ({ card_id: card.id, ...l })))
+    .insert(
+      labels.map((l) => ({
+        card_id: card.id,
+        ...l,
+        is_published: !!input.openAll,
+      })),
+    )
     .select("id");
   if (lErr) {
     await supabase.from("id_cards").delete().eq("id", card.id);
@@ -80,10 +87,11 @@ function cleanIds(ids: unknown[]) {
 }
 
 /**
- * Replace the tags of every label on one card. Form shape: label_id (repeated)
- * and, per label, checkboxes named `organ_system:<label_id>`.
+ * Save every label on one card: which are open to students (checkboxes named
+ * `open`, value = label id) and each label's tags (checkboxes named
+ * `organ_system:<label_id>`).
  */
-export async function setLabelOrganSystems(formData: FormData) {
+export async function saveCardLabels(formData: FormData) {
   const { supabase } = await requireAdmin("/admin/identify");
   const cardId = formData.get("card_id")?.toString() ?? "";
   const { data: labels } = await supabase
@@ -106,12 +114,32 @@ export async function setLabelOrganSystems(formData: FormData) {
     error || rows.length === 0
       ? { error }
       : await supabase.from("id_card_label_organ_systems").insert(rows);
+  const open = new Set(formData.getAll("open").map(String));
+  const openIds = labelIds.filter((id) => open.has(id));
+  const closedIds = labelIds.filter((id) => !open.has(id));
+  const [{ error: openErr }, { error: closeErr }] = await Promise.all([
+    openIds.length
+      ? supabase
+          .from("id_card_labels")
+          .update({ is_published: true })
+          .in("id", openIds)
+      : { error: null },
+    closedIds.length
+      ? supabase
+          .from("id_card_labels")
+          .update({ is_published: false })
+          .in("id", closedIds)
+      : { error: null },
+  ]);
   revalidatePath("/admin/identify");
   redirect(
     "/admin/identify?" +
-      (insErr
-        ? "error=" + encodeURIComponent("บันทึกระบบอวัยวะไม่สำเร็จ")
-        : "ok=" + encodeURIComponent("บันทึกระบบอวัยวะแล้ว")) +
+      (insErr || openErr || closeErr
+        ? "error=" + encodeURIComponent("บันทึกไม่สำเร็จ")
+        : "ok=" +
+          encodeURIComponent(
+            `บันทึกแล้ว · เปิด ${openIds.length}/${labelIds.length} ข้อ`,
+          )) +
       `#card-${cardId}`,
   );
 }

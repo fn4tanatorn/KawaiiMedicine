@@ -8,7 +8,7 @@ import { EmptyState } from "@/components/empty-state";
 import { ConfirmButton } from "@/components/confirm-button";
 import {
   deleteIdCard,
-  setLabelOrganSystems,
+  saveCardLabels,
   setIdCardPublished,
 } from "./actions";
 import { CardForm } from "./card-form";
@@ -25,7 +25,7 @@ export default async function IdentifyAdminPage({
     supabase
       .from("id_cards")
       .select(
-        "id, title, subject, image_path, is_published, id_card_labels(id, label_no, answer, id_card_label_organ_systems(organ_system_id))",
+        "id, title, subject, image_path, is_published, id_card_labels(id, label_no, answer, is_published, id_card_label_organ_systems(organ_system_id))",
       )
       .order("created_at", { ascending: false }),
     supabase
@@ -86,19 +86,23 @@ export default async function IdentifyAdminPage({
                     </div>
                     <details className="text-sm text-ink-2">
                       <summary className="cursor-pointer">
-                        เฉลย {c.id_card_labels.length} ตำแหน่ง ·{" "}
+                        {c.id_card_labels.length} ข้อ · เปิด{" "}
+                        {c.id_card_labels.filter((l) => l.is_published).length}
+                        /{c.id_card_labels.length} · ติดระบบแล้ว{" "}
                         {
                           c.id_card_labels.filter(
                             (l) => l.id_card_label_organ_systems.length,
                           ).length
-                        }{" "}
-                        ข้อติดระบบแล้ว
+                        }
                       </summary>
                       <form
-                        action={setLabelOrganSystems}
+                        action={saveCardLabels}
                         className="mt-2 space-y-2"
                       >
                         <input type="hidden" name="card_id" value={c.id} />
+                        <p className="text-xs">
+                          ติ๊กช่องหน้าข้อ = เปิดให้นักศึกษาทำ · กดชื่อข้อเพื่อติดระบบอวัยวะ
+                        </p>
                         <ol className="space-y-1">
                           {[...c.id_card_labels]
                             .sort((a, b) => a.label_no - b.label_no)
@@ -107,10 +111,24 @@ export default async function IdentifyAdminPage({
                                 (t) => t.organ_system_id,
                               );
                               return (
-                                <li key={l.id}>
-                                  <details>
+                                <li key={l.id} className="flex gap-2">
+                                  <input
+                                    type="checkbox"
+                                    name="open"
+                                    value={l.id}
+                                    defaultChecked={l.is_published}
+                                    aria-label={`เปิดข้อ ${l.label_no}`}
+                                    className="mt-1"
+                                  />
+                                  <details className="min-w-0 flex-1">
                                     <summary className="cursor-pointer">
-                                      <span className="text-ink">
+                                      <span
+                                        className={
+                                          l.is_published
+                                            ? "text-ink"
+                                            : "text-ink-2 line-through decoration-ink-2/40"
+                                        }
+                                      >
                                         {l.label_no}. {l.answer}
                                       </span>{" "}
                                       {tags.map((t) => (
@@ -136,7 +154,7 @@ export default async function IdentifyAdminPage({
                             })}
                         </ol>
                         <button className={btn.secondary}>
-                          บันทึกระบบอวัยวะ
+                          บันทึก
                         </button>
                       </form>
                     </details>

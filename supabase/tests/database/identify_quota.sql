@@ -1,12 +1,12 @@
 -- pgTAP tests for Identify typing (20260924120000_identify_for_students.sql):
--- students see only published cards, never read answers, can only answer the
+-- students see only published cards and labels, never read answers, can only answer the
 -- question the server picked, get the weighted review order, and are capped
 -- at 5 answers per day (10 once every published video is completed).
 -- Run with: supabase test db
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(19);
+select plan(20);
 
 select gen_random_uuid() as student \gset
 select gen_random_uuid() as student2 \gset
@@ -32,9 +32,13 @@ insert into public.id_cards (id, title, image_path, is_published) values
   (:'card_draft', 'Draft', 'identify/draft.jpg', false);
 -- Every published label has the same answer so grading is predictable
 -- whichever label gets picked.
-insert into public.id_card_labels (card_id, label_no, answer, synonyms)
-select :'card_pub'::uuid, n, 'Frontal bone', '{frontal}'
+insert into public.id_card_labels (card_id, label_no, answer, synonyms, is_published)
+select :'card_pub'::uuid, n, 'Frontal bone', '{frontal}', true
 from generate_series(1, 3) n;
+-- Label 4 is on the published card but not released yet (new labels default
+-- to hidden).
+insert into public.id_card_labels (card_id, label_no, answer)
+values (:'card_pub', 4, 'Not taught yet');
 insert into public.id_card_labels (card_id, label_no, answer)
 values (:'card_draft', 1, 'Hidden');
 
@@ -47,6 +51,11 @@ insert into public.id_answers (user_id, card_id, label_no, given, is_correct, an
   (:'student2', :'card_pub', 3, 'Frontal bone', true, now() - interval '2 days');
 update public.id_answers set answered_on = (answered_at at time zone 'Asia/Bangkok')::date
 where user_id = :'student2';
+
+select set_config('request.jwt.claims', json_build_object('sub', :'student')::text, true);
+select is(
+  (select count(*)::int from public.id_item_groups() g where g.card_id = :'card_pub'),
+  3, 'hidden labels are never offered to students');
 
 -- ---------------------------------------------------------------------------
 set local role authenticated;
