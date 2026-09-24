@@ -38,22 +38,26 @@ export async function createIdCard(input: {
     .single();
   if (error || !card) return { ok: false, error: "สร้างการ์ดไม่สำเร็จ" };
 
-  const { error: lErr } = await supabase
+  const { data: newLabels, error: lErr } = await supabase
     .from("id_card_labels")
-    .insert(labels.map((l) => ({ card_id: card.id, ...l })));
+    .insert(labels.map((l) => ({ card_id: card.id, ...l })))
+    .select("id");
   if (lErr) {
     await supabase.from("id_cards").delete().eq("id", card.id);
     return { ok: false, error: "บันทึกเฉลยไม่สำเร็จ" };
   }
+  // Tags picked on the create form apply to every label of the new card.
   const systemIds = cleanIds(input.organSystemIds ?? []);
-  if (systemIds.length) {
+  if (systemIds.length && newLabels?.length) {
     const { error: tErr } = await supabase
-      .from("id_card_organ_systems")
+      .from("id_card_label_organ_systems")
       .insert(
-        systemIds.map((organ_system_id) => ({
-          card_id: card.id,
-          organ_system_id,
-        })),
+        newLabels.flatMap((l) =>
+          systemIds.map((organ_system_id) => ({
+            label_id: l.id,
+            organ_system_id,
+          })),
+        ),
       );
     if (tErr) {
       revalidatePath("/admin/identify");
@@ -75,31 +79,40 @@ function cleanIds(ids: unknown[]) {
   ];
 }
 
-export async function setIdCardOrganSystems(formData: FormData) {
+/**
+ * Replace the tags of every label on one card. Form shape: label_id (repeated)
+ * and, per label, checkboxes named `organ_system:<label_id>`.
+ */
+export async function setLabelOrganSystems(formData: FormData) {
   const { supabase } = await requireAdmin("/admin/identify");
-  const id = formData.get("id")?.toString() ?? "";
-  const systemIds = cleanIds(formData.getAll("organ_system"));
-  const { error } = await supabase
-    .from("id_card_organ_systems")
-    .delete()
-    .eq("card_id", id);
+  const cardId = formData.get("card_id")?.toString() ?? "";
+  const { data: labels } = await supabase
+    .from("id_card_labels")
+    .select("id")
+    .eq("card_id", cardId);
+  const labelIds = (labels ?? []).map((l) => l.id);
+  const rows = labelIds.flatMap((label_id) =>
+    cleanIds(formData.getAll(`organ_system:${label_id}`)).map(
+      (organ_system_id) => ({ label_id, organ_system_id }),
+    ),
+  );
+  const { error } = labelIds.length
+    ? await supabase
+        .from("id_card_label_organ_systems")
+        .delete()
+        .in("label_id", labelIds)
+    : { error: null };
   const { error: insErr } =
-    error || systemIds.length === 0
+    error || rows.length === 0
       ? { error }
-      : await supabase
-          .from("id_card_organ_systems")
-          .insert(
-            systemIds.map((organ_system_id) => ({
-              card_id: id,
-              organ_system_id,
-            })),
-          );
+      : await supabase.from("id_card_label_organ_systems").insert(rows);
   revalidatePath("/admin/identify");
   redirect(
     "/admin/identify?" +
       (insErr
         ? "error=" + encodeURIComponent("บันทึกระบบอวัยวะไม่สำเร็จ")
-        : "ok=" + encodeURIComponent("บันทึกระบบอวัยวะแล้ว")),
+        : "ok=" + encodeURIComponent("บันทึกระบบอวัยวะแล้ว")) +
+      `#card-${cardId}`,
   );
 }
 

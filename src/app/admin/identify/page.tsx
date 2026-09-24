@@ -8,7 +8,7 @@ import { EmptyState } from "@/components/empty-state";
 import { ConfirmButton } from "@/components/confirm-button";
 import {
   deleteIdCard,
-  setIdCardOrganSystems,
+  setLabelOrganSystems,
   setIdCardPublished,
 } from "./actions";
 import { CardForm } from "./card-form";
@@ -25,7 +25,7 @@ export default async function IdentifyAdminPage({
     supabase
       .from("id_cards")
       .select(
-        "id, title, subject, image_path, is_published, id_card_labels(label_no, answer), id_card_organ_systems(organ_system_id)",
+        "id, title, subject, image_path, is_published, id_card_labels(id, label_no, answer, id_card_label_organ_systems(organ_system_id))",
       )
       .order("created_at", { ascending: false }),
     supabase
@@ -63,6 +63,7 @@ export default async function IdentifyAdminPage({
               {cards.map((c) => (
                 <li
                   key={c.id}
+                  id={`card-${c.id}`}
                   className="overflow-hidden rounded-card border border-line bg-surface shadow-soft"
                 >
                   {urls.get(c.image_path) && (
@@ -83,44 +84,61 @@ export default async function IdentifyAdminPage({
                         {c.is_published ? "เผยแพร่" : "ร่าง"}
                       </span>
                     </div>
-                    {c.id_card_organ_systems.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {c.id_card_organ_systems.map((t) => (
-                          <span key={t.organ_system_id} className={badge.gray}>
-                            {systemName.get(t.organ_system_id)}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    <details className="text-sm text-ink-2">
-                      <summary className="cursor-pointer">ระบบอวัยวะ</summary>
-                      <form
-                        action={setIdCardOrganSystems}
-                        className="mt-2 space-y-2"
-                      >
-                        <input type="hidden" name="id" value={c.id} />
-                        <OrganSystemPicker
-                          systems={systems}
-                          selected={c.id_card_organ_systems.map(
-                            (t) => t.organ_system_id,
-                          )}
-                        />
-                        <button className={btn.secondary}>บันทึก</button>
-                      </form>
-                    </details>
                     <details className="text-sm text-ink-2">
                       <summary className="cursor-pointer">
-                        เฉลย {c.id_card_labels.length} ตำแหน่ง
+                        เฉลย {c.id_card_labels.length} ตำแหน่ง ·{" "}
+                        {
+                          c.id_card_labels.filter(
+                            (l) => l.id_card_label_organ_systems.length,
+                          ).length
+                        }{" "}
+                        ข้อติดระบบแล้ว
                       </summary>
-                      <ol className="mt-2 space-y-0.5">
-                        {[...c.id_card_labels]
-                          .sort((a, b) => a.label_no - b.label_no)
-                          .map((l) => (
-                            <li key={l.label_no}>
-                              {l.label_no}. {l.answer}
-                            </li>
-                          ))}
-                      </ol>
+                      <form
+                        action={setLabelOrganSystems}
+                        className="mt-2 space-y-2"
+                      >
+                        <input type="hidden" name="card_id" value={c.id} />
+                        <ol className="space-y-1">
+                          {[...c.id_card_labels]
+                            .sort((a, b) => a.label_no - b.label_no)
+                            .map((l) => {
+                              const tags = l.id_card_label_organ_systems.map(
+                                (t) => t.organ_system_id,
+                              );
+                              return (
+                                <li key={l.id}>
+                                  <details>
+                                    <summary className="cursor-pointer">
+                                      <span className="text-ink">
+                                        {l.label_no}. {l.answer}
+                                      </span>{" "}
+                                      {tags.map((t) => (
+                                        <span
+                                          key={t}
+                                          className={`${badge.gray} ml-1`}
+                                        >
+                                          {systemName.get(t)}
+                                        </span>
+                                      ))}
+                                    </summary>
+                                    <div className="py-2 pl-4">
+                                      <OrganSystemPicker
+                                        systems={systems}
+                                        selected={tags}
+                                        name={`organ_system:${l.id}`}
+                                        legend={null}
+                                      />
+                                    </div>
+                                  </details>
+                                </li>
+                              );
+                            })}
+                        </ol>
+                        <button className={btn.secondary}>
+                          บันทึกระบบอวัยวะ
+                        </button>
+                      </form>
                     </details>
                     <div className="flex flex-wrap gap-2">
                       <Link

@@ -475,6 +475,36 @@ export type Database = {
           },
         ]
       }
+      id_card_label_organ_systems: {
+        Row: {
+          label_id: string
+          organ_system_id: number
+        }
+        Insert: {
+          label_id: string
+          organ_system_id: number
+        }
+        Update: {
+          label_id?: string
+          organ_system_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "id_card_label_organ_systems_label_id_fkey"
+            columns: ["label_id"]
+            isOneToOne: false
+            referencedRelation: "id_card_labels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "id_card_label_organ_systems_organ_system_id_fkey"
+            columns: ["organ_system_id"]
+            isOneToOne: false
+            referencedRelation: "organ_systems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       id_card_labels: {
         Row: {
           answer: string
@@ -503,36 +533,6 @@ export type Database = {
             columns: ["card_id"]
             isOneToOne: false
             referencedRelation: "id_cards"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      id_card_organ_systems: {
-        Row: {
-          card_id: string
-          organ_system_id: number
-        }
-        Insert: {
-          card_id: string
-          organ_system_id: number
-        }
-        Update: {
-          card_id?: string
-          organ_system_id?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "id_card_organ_systems_card_id_fkey"
-            columns: ["card_id"]
-            isOneToOne: false
-            referencedRelation: "id_cards"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "id_card_organ_systems_organ_system_id_fkey"
-            columns: ["organ_system_id"]
-            isOneToOne: false
-            referencedRelation: "organ_systems"
             referencedColumns: ["id"]
           },
         ]
