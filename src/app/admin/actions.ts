@@ -542,11 +542,13 @@ async function setOrganSystems(
     .delete()
     .in("question_id", questionIds);
   if (error || systemIds.length === 0) return error;
-  const { error: insErr } = await supabase.from("question_organ_systems").insert(
-    questionIds.flatMap((question_id) =>
-      systemIds.map((organ_system_id) => ({ question_id, organ_system_id })),
-    ),
-  );
+  const { error: insErr } = await supabase
+    .from("question_organ_systems")
+    .insert(
+      questionIds.flatMap((question_id) =>
+        systemIds.map((organ_system_id) => ({ question_id, organ_system_id })),
+      ),
+    );
   return insErr;
 }
 
@@ -618,7 +620,9 @@ export async function createQuestion(formData: FormData) {
     );
   }
   if (await setOrganSystems(supabase, [q.id], readOrganSystems(formData)))
-    redirect(withMsg(path, "error", "เพิ่มคำถามแล้ว แต่บันทึกระบบอวัยวะไม่สำเร็จ"));
+    redirect(
+      withMsg(path, "error", "เพิ่มคำถามแล้ว แต่บันทึกระบบอวัยวะไม่สำเร็จ"),
+    );
   revalidatePath(path);
   redirect(withMsg(path, "ok", "เพิ่มคำถามแล้ว") + `#q-${q.id}`);
 }
@@ -850,8 +854,7 @@ export async function bulkCreateTextQuestions(input: {
   organSystemIds?: number[];
   items: { imagePath: string; answers: string[] }[];
 }): Promise<
-  | { ok: true; created: number; warning?: string }
-  | { ok: false; error: string }
+  { ok: true; created: number; warning?: string } | { ok: false; error: string }
 > {
   const { supabase } = await requireStaff();
   const stem = input.stem.trim();

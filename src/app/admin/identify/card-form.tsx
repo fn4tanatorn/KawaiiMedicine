@@ -6,6 +6,10 @@ import { createClient } from "@/lib/supabase/client";
 import { btn, card, input, label } from "@/components/ui";
 import { createIdCard } from "./actions";
 import { parseLabelLines } from "./parse-labels";
+import {
+  OrganSystemPicker,
+  type OrganSystem,
+} from "@/components/organ-system-picker";
 
 const ACCEPT = "image/jpeg,image/png,image/webp,image/gif";
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -13,12 +17,13 @@ const PLACEHOLDER = `1. Frontal bone
 2. Supraorbital notch (foramen)
 3. Nasal bone | nasal`;
 
-export function CardForm() {
+export function CardForm({ organSystems }: { organSystems: OrganSystem[] }) {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [subject, setSubject] = useState("anatomy");
   const [file, setFile] = useState<File | null>(null);
   const [labels, setLabels] = useState("");
+  const [systemIds, setSystemIds] = useState<number[]>([]);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const parsed = parseLabelLines(labels);
@@ -40,17 +45,28 @@ export function CardForm() {
       setBusy(false);
       return setMsg({ ok: false, text: error.message });
     }
-    const res = await createIdCard({ title, subject, imagePath: path, labels });
+    const res = await createIdCard({
+      title,
+      subject,
+      imagePath: path,
+      labels,
+      organSystemIds: systemIds,
+    });
     setBusy(false);
     if (!res.ok) {
       await supabase.storage.from("question-images").remove([path]);
       return setMsg({ ok: false, text: res.error });
     }
     setTitle("");
+    setSystemIds([]);
     setLabels("");
     setFile(null);
     (e.target as HTMLFormElement).reset();
-    setMsg({ ok: true, text: "เพิ่มการ์ดแล้ว" });
+    setMsg(
+      res.warning
+        ? { ok: false, text: res.warning }
+        : { ok: true, text: "เพิ่มการ์ดแล้ว" },
+    );
     router.refresh();
   }
 
@@ -78,6 +94,15 @@ export function CardForm() {
           <option value="histology">Histology</option>
         </select>
       </label>
+      <OrganSystemPicker
+        systems={organSystems}
+        checked={systemIds}
+        onToggle={(id) =>
+          setSystemIds((ids) =>
+            ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id],
+          )
+        }
+      />
       <label className={label}>
         <span>รูป (มีเลขกำกับบนรูปแล้ว)</span>
         <input

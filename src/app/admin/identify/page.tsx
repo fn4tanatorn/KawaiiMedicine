@@ -6,8 +6,13 @@ import { badge, btn } from "@/components/ui";
 import { Flash } from "@/components/flash";
 import { EmptyState } from "@/components/empty-state";
 import { ConfirmButton } from "@/components/confirm-button";
-import { deleteIdCard, setIdCardPublished } from "./actions";
+import {
+  deleteIdCard,
+  setIdCardOrganSystems,
+  setIdCardPublished,
+} from "./actions";
 import { CardForm } from "./card-form";
+import { OrganSystemPicker } from "@/components/organ-system-picker";
 
 export const metadata: Metadata = { title: "Identify typing (beta)" };
 
@@ -16,12 +21,20 @@ export default async function IdentifyAdminPage({
 }: PageProps<"/admin/identify">) {
   const sp = await searchParams;
   const { supabase } = await requireAdmin("/admin/identify");
-  const { data: cards } = await supabase
-    .from("id_cards")
-    .select(
-      "id, title, subject, image_path, is_published, id_card_labels(label_no, answer)",
-    )
-    .order("created_at", { ascending: false });
+  const [{ data: cards }, { data: organSystems }] = await Promise.all([
+    supabase
+      .from("id_cards")
+      .select(
+        "id, title, subject, image_path, is_published, id_card_labels(label_no, answer), id_card_organ_systems(organ_system_id)",
+      )
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("organ_systems")
+      .select("id, name_th, name_en")
+      .order("position"),
+  ]);
+  const systems = organSystems ?? [];
+  const systemName = new Map(systems.map((s) => [s.id, s.name_en]));
   const urls = await signQuestionImages(
     supabase,
     (cards ?? []).map((c) => c.image_path),
@@ -70,6 +83,31 @@ export default async function IdentifyAdminPage({
                         {c.is_published ? "เผยแพร่" : "ร่าง"}
                       </span>
                     </div>
+                    {c.id_card_organ_systems.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {c.id_card_organ_systems.map((t) => (
+                          <span key={t.organ_system_id} className={badge.gray}>
+                            {systemName.get(t.organ_system_id)}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <details className="text-sm text-ink-2">
+                      <summary className="cursor-pointer">ระบบอวัยวะ</summary>
+                      <form
+                        action={setIdCardOrganSystems}
+                        className="mt-2 space-y-2"
+                      >
+                        <input type="hidden" name="id" value={c.id} />
+                        <OrganSystemPicker
+                          systems={systems}
+                          selected={c.id_card_organ_systems.map(
+                            (t) => t.organ_system_id,
+                          )}
+                        />
+                        <button className={btn.secondary}>บันทึก</button>
+                      </form>
+                    </details>
                     <details className="text-sm text-ink-2">
                       <summary className="cursor-pointer">
                         เฉลย {c.id_card_labels.length} ตำแหน่ง
@@ -118,7 +156,7 @@ export default async function IdentifyAdminPage({
             </ul>
           )}
         </section>
-        <CardForm />
+        <CardForm organSystems={systems} />
       </div>
     </main>
   );

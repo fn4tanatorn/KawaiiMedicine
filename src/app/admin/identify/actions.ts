@@ -10,7 +10,10 @@ export async function createIdCard(input: {
   subject: string;
   imagePath: string;
   labels: string;
-}): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
+  organSystemIds?: number[];
+}): Promise<
+  { ok: true; id: string; warning?: string } | { ok: false; error: string }
+> {
   const { supabase, user } = await requireAdmin("/admin/identify");
   const title = input.title.trim();
   const subject = input.subject === "histology" ? "histology" : "anatomy";
@@ -42,8 +45,62 @@ export async function createIdCard(input: {
     await supabase.from("id_cards").delete().eq("id", card.id);
     return { ok: false, error: "บันทึกเฉลยไม่สำเร็จ" };
   }
+  const systemIds = cleanIds(input.organSystemIds ?? []);
+  if (systemIds.length) {
+    const { error: tErr } = await supabase
+      .from("id_card_organ_systems")
+      .insert(
+        systemIds.map((organ_system_id) => ({
+          card_id: card.id,
+          organ_system_id,
+        })),
+      );
+    if (tErr) {
+      revalidatePath("/admin/identify");
+      // The card is saved; keep its image (the client rolls back on !ok).
+      return {
+        ok: true,
+        id: card.id,
+        warning: "เพิ่มการ์ดแล้ว แต่บันทึกระบบอวัยวะไม่สำเร็จ",
+      };
+    }
+  }
   revalidatePath("/admin/identify");
   return { ok: true, id: card.id };
+}
+
+function cleanIds(ids: unknown[]) {
+  return [
+    ...new Set(ids.map(Number).filter((n) => Number.isInteger(n) && n > 0)),
+  ];
+}
+
+export async function setIdCardOrganSystems(formData: FormData) {
+  const { supabase } = await requireAdmin("/admin/identify");
+  const id = formData.get("id")?.toString() ?? "";
+  const systemIds = cleanIds(formData.getAll("organ_system"));
+  const { error } = await supabase
+    .from("id_card_organ_systems")
+    .delete()
+    .eq("card_id", id);
+  const { error: insErr } =
+    error || systemIds.length === 0
+      ? { error }
+      : await supabase
+          .from("id_card_organ_systems")
+          .insert(
+            systemIds.map((organ_system_id) => ({
+              card_id: id,
+              organ_system_id,
+            })),
+          );
+  revalidatePath("/admin/identify");
+  redirect(
+    "/admin/identify?" +
+      (insErr
+        ? "error=" + encodeURIComponent("บันทึกระบบอวัยวะไม่สำเร็จ")
+        : "ok=" + encodeURIComponent("บันทึกระบบอวัยวะแล้ว")),
+  );
 }
 
 export async function deleteIdCard(formData: FormData) {

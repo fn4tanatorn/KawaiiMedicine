@@ -4,7 +4,10 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { bulkCreateTextQuestions } from "@/app/admin/actions";
-import { OrganSystemPicker, type OrganSystem } from "./organ-system-picker";
+import {
+  OrganSystemPicker,
+  type OrganSystem,
+} from "@/components/organ-system-picker";
 import { btn, input, label } from "@/components/ui";
 
 const ACCEPT = "image/jpeg,image/png,image/webp,image/gif";

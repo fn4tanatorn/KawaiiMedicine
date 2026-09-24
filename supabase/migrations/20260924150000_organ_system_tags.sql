@@ -1,7 +1,7 @@
--- Organ-system tags on questions (many-to-many), groundwork for per-system
--- score breakdowns. organ_systems is a fixed lookup list readable by everyone
--- signed in; question_organ_systems follows the same visibility as questions
--- (staff see all, students only for published exams).
+-- Organ-system tags (many-to-many) on exam questions and Identify cards,
+-- groundwork for per-system filtering and score breakdowns. organ_systems is a
+-- shared lookup list readable by everyone signed in; each join table follows
+-- the visibility of what it tags (staff see all, students only published).
 
 create table public.organ_systems (
   id       smallint generated always as identity primary key,
@@ -56,6 +56,26 @@ create policy "question_organ_systems: staff manages"
   on public.question_organ_systems for all to authenticated
   using (public.is_staff()) with check (public.is_staff());
 
+create table public.id_card_organ_systems (
+  card_id         uuid not null references public.id_cards (id) on delete cascade,
+  organ_system_id smallint not null references public.organ_systems (id) on delete cascade,
+  primary key (card_id, organ_system_id)
+);
+create index id_card_organ_systems_system_idx
+  on public.id_card_organ_systems (organ_system_id);
+
+alter table public.id_card_organ_systems enable row level security;
+create policy "id_card_organ_systems: published readable"
+  on public.id_card_organ_systems for select to authenticated
+  using (
+    public.is_staff()
+    or exists (select 1 from public.id_cards c where c.id = card_id and c.is_published)
+  );
+create policy "id_card_organ_systems: staff manages"
+  on public.id_card_organ_systems for all to authenticated
+  using (public.is_staff()) with check (public.is_staff());
+
 -- Explicit grants: fresh databases no longer auto-expose new tables.
 grant select, insert, update, delete on public.organ_systems          to authenticated;
 grant select, insert, update, delete on public.question_organ_systems to authenticated;
+grant select, insert, update, delete on public.id_card_organ_systems  to authenticated;

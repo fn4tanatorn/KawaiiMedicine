@@ -18,7 +18,7 @@ import {
 } from "../../actions";
 import { NewQuestionFields } from "./question-form-fields";
 import { BulkImageImport } from "./bulk-image-import";
-import { OrganSystemPicker } from "./organ-system-picker";
+import { OrganSystemPicker } from "@/components/organ-system-picker";
 
 export const metadata: Metadata = { title: "แก้ไขข้อสอบ" };
 
@@ -34,19 +34,19 @@ export default async function AdminExamPage({
 
   const [{ data: exam }, { data: courses }, { data: organSystems }] =
     await Promise.all([
-    supabase
-      .from("exams")
-      .select(
-        "id, slug, title, description, course_id, time_limit_minutes, passing_score, is_published, reveal_answers, fuzzy_matching, max_attempts, opens_at, closes_at, questions(id, kind, stem, image_path, explanation, points, position, choices(id, body, is_correct, position), answer_keys(id, answer, position), question_organ_systems(organ_system_id))",
-      )
-      .eq("id", id)
-      .maybeSingle(),
-    supabase.from("courses").select("id, title").order("title"),
-    supabase
-      .from("organ_systems")
-      .select("id, name_th, name_en")
-      .order("position"),
-  ]);
+      supabase
+        .from("exams")
+        .select(
+          "id, slug, title, description, course_id, time_limit_minutes, passing_score, is_published, reveal_answers, fuzzy_matching, max_attempts, opens_at, closes_at, questions(id, kind, stem, image_path, explanation, points, position, choices(id, body, is_correct, position), answer_keys(id, answer, position), question_organ_systems(organ_system_id))",
+        )
+        .eq("id", id)
+        .maybeSingle(),
+      supabase.from("courses").select("id, title").order("title"),
+      supabase
+        .from("organ_systems")
+        .select("id, name_th, name_en")
+        .order("position"),
+    ]);
   const systems = organSystems ?? [];
   const systemName = new Map(systems.map((s) => [s.id, s.name_en]));
   if (!exam) notFound();

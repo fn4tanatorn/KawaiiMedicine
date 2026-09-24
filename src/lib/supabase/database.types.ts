@@ -507,6 +507,36 @@ export type Database = {
           },
         ]
       }
+      id_card_organ_systems: {
+        Row: {
+          card_id: string
+          organ_system_id: number
+        }
+        Insert: {
+          card_id: string
+          organ_system_id: number
+        }
+        Update: {
+          card_id?: string
+          organ_system_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "id_card_organ_systems_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "id_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "id_card_organ_systems_organ_system_id_fkey"
+            columns: ["organ_system_id"]
+            isOneToOne: false
+            referencedRelation: "organ_systems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       id_cards: {
         Row: {
           created_at: string
@@ -534,6 +564,66 @@ export type Database = {
           is_published?: boolean
           subject?: string
           title?: string
+        }
+        Relationships: []
+      }
+      id_pending: {
+        Row: {
+          card_id: string
+          label_no: number
+          served_at: string
+          user_id: string
+        }
+        Insert: {
+          card_id: string
+          label_no: number
+          served_at?: string
+          user_id: string
+        }
+        Update: {
+          card_id?: string
+          label_no?: number
+          served_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "id_pending_card_id_label_no_fkey"
+            columns: ["card_id", "label_no"]
+            isOneToOne: false
+            referencedRelation: "id_card_labels"
+            referencedColumns: ["card_id", "label_no"]
+          },
+          {
+            foreignKeyName: "id_pending_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organ_systems: {
+        Row: {
+          id: number
+          name_en: string
+          name_th: string
+          position: number
+          slug: string
+        }
+        Insert: {
+          id?: never
+          name_en: string
+          name_th: string
+          position?: number
+          slug: string
+        }
+        Update: {
+          id?: never
+          name_en?: string
+          name_th?: string
+          position?: number
+          slug?: string
         }
         Relationships: []
       }
@@ -566,6 +656,36 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      question_organ_systems: {
+        Row: {
+          organ_system_id: number
+          question_id: string
+        }
+        Insert: {
+          organ_system_id: number
+          question_id: string
+        }
+        Update: {
+          organ_system_id?: number
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_organ_systems_organ_system_id_fkey"
+            columns: ["organ_system_id"]
+            isOneToOne: false
+            referencedRelation: "organ_systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_organ_systems_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       questions: {
         Row: {
@@ -864,6 +984,10 @@ export type Database = {
       }
     }
     Functions: {
+      answer_distance: {
+        Args: { p_answer: string; p_key: string }
+        Returns: number
+      }
       answer_id_label: {
         Args: { p_answer: string }
         Returns: {
@@ -876,10 +1000,6 @@ export type Database = {
           used: number
         }[]
       }
-      answer_distance: {
-        Args: { p_answer: string; p_key: string }
-        Returns: number
-      }
       current_user_email: { Args: never; Returns: string }
       current_user_role: {
         Args: never
@@ -887,11 +1007,6 @@ export type Database = {
       }
       exam_is_open: { Args: { p_exam_id: string }; Returns: boolean }
       fuzzy_tolerance: { Args: { p_norm_key: string }; Returns: number }
-      id_daily_limit: { Args: never; Returns: number | null }
-      id_quota: {
-        Args: never
-        Returns: { daily_limit: number | null; used: number }[]
-      }
       get_attempt_review: {
         Args: { p_attempt_id: string }
         Returns: {
@@ -941,10 +1056,29 @@ export type Database = {
           students: number
         }[]
       }
+      id_daily_limit: { Args: never; Returns: number | null }
+      id_item_groups: {
+        Args: never
+        Returns: {
+          card_id: string
+          grp: number
+          label_no: number
+        }[]
+      }
+      id_quota: {
+        Args: never
+        Returns: {
+          daily_limit: number | null
+          used: number
+        }[]
+      }
       is_staff: { Args: never; Returns: boolean }
       next_id_question: {
         Args: { p_card_id?: string }
-        Returns: { card_id: string; label_no: number }[]
+        Returns: {
+          card_id: string
+          label_no: number
+        }[]
       }
       normalize_answer: { Args: { p: string }; Returns: string }
       submit_exam_attempt: {

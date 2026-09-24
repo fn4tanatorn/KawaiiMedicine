@@ -1,16 +1,18 @@
 -- pgTAP tests for organ-system tags: students see tags only on published
--- exams and cannot write them.
+-- exams / Identify cards and cannot write them.
 -- Run with: supabase test db
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(5);
+select plan(7);
 
 select gen_random_uuid() as student \gset
 select gen_random_uuid() as exam_pub \gset
 select gen_random_uuid() as exam_draft \gset
 select gen_random_uuid() as q_pub \gset
 select gen_random_uuid() as q_draft \gset
+select gen_random_uuid() as card_pub \gset
+select gen_random_uuid() as card_draft \gset
 select id as cardio from public.organ_systems where slug = 'cardiovascular' \gset
 
 insert into auth.users (id, email) values (:'student', 'tag-student@test.local');
@@ -22,6 +24,11 @@ insert into public.questions (id, exam_id, stem, position) values
   (:'q_draft', :'exam_draft', 'Q', 0);
 insert into public.question_organ_systems (question_id, organ_system_id) values
   (:'q_pub', :cardio), (:'q_draft', :cardio);
+insert into public.id_cards (id, title, image_path, is_published) values
+  (:'card_pub',   'Pub',   'identify/a.png', true),
+  (:'card_draft', 'Draft', 'identify/b.png', false);
+insert into public.id_card_organ_systems (card_id, organ_system_id) values
+  (:'card_pub', :cardio), (:'card_draft', :cardio);
 
 set local role authenticated;
 select set_config('request.jwt.claims', json_build_object('sub', :'student')::text, true);
@@ -39,6 +46,13 @@ select throws_ok(
 select throws_ok(
   $$insert into public.organ_systems (slug, name_th, name_en) values ('x', 'x', 'x')$$,
   '42501', null, 'students cannot add organ systems');
+
+select is((select count(*)::int from public.id_card_organ_systems), 1,
+  'students see card tags only on published cards');
+select throws_ok(
+  format('insert into public.id_card_organ_systems values (%L, %s)', :'card_draft',
+    (select id from public.organ_systems where slug = 'renal')),
+  '42501', null, 'students cannot tag cards');
 
 select * from finish();
 rollback;
