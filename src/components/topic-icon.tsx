@@ -1,23 +1,19 @@
 import Image from "next/image";
 import { cardTint } from "./ui";
 
-/**
- * The 8 decorative topic icons in public/icons/, cycled by index for cards
- * whose title doesn't obviously match one (see topicIconFor below).
- */
-const TOPIC_ICONS = [
-  "brain",
-  "stethoscope",
-  "lungs",
-  "heart",
-  "microscope",
-  "syringe",
-  "blood-cell",
-  "capsule",
-] as const;
+/** The 8 decorative topic icons in public/icons/. */
+type TopicIconName =
+  | "brain"
+  | "stethoscope"
+  | "lungs"
+  | "heart"
+  | "microscope"
+  | "syringe"
+  | "blood-cell"
+  | "capsule";
 
 /** Title keywords (Thai + English) mapped to a specific icon, checked in order. */
-const KEYWORD_ICONS: [RegExp, (typeof TOPIC_ICONS)[number]][] = [
+const KEYWORD_ICONS: [RegExp, TopicIconName][] = [
   [/heart|cardio|หัวใจ|หลอดเลือด/i, "heart"],
   [/lung|resp|ปอด|หายใจ|ทางเดินหายใจ/i, "lungs"],
   [/brain|neuro|สมอง|ประสาท/i, "brain"],
@@ -27,12 +23,19 @@ const KEYWORD_ICONS: [RegExp, (typeof TOPIC_ICONS)[number]][] = [
   [/lab|micro|histolog|จุลชีพ|จุลกาย|ห้องปฏิบัติการ/i, "microscope"],
 ];
 
-function iconSrc(name: (typeof TOPIC_ICONS)[number]): string {
+/**
+ * Icons that don't depict a specific organ or system, cycled by index for
+ * cards whose title matches no keyword. Organ icons (lungs, heart, brain…)
+ * are keyword-only, so e.g. a GI course never shows lungs.
+ */
+const GENERIC_ICONS: TopicIconName[] = ["stethoscope", "microscope"];
+
+function iconSrc(name: TopicIconName): string {
   return `/icons/${name}.png`;
 }
 
 export function topicIconSrc(index: number): string {
-  return iconSrc(TOPIC_ICONS[index % TOPIC_ICONS.length]);
+  return iconSrc(GENERIC_ICONS[index % GENERIC_ICONS.length]);
 }
 
 /** Best-guess icon for a title (keyword match), falling back to index rotation. */
