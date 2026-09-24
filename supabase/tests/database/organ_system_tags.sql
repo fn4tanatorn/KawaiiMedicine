@@ -1,5 +1,5 @@
 -- pgTAP tests for organ-system tags: students see tags only on published
--- exams / Identify cards and cannot write them.
+-- exams and cannot write them; Identify label tags are staff-only.
 -- Run with: supabase test db
 
 begin;
@@ -27,13 +27,16 @@ insert into public.question_organ_systems (question_id, organ_system_id) values
 insert into public.id_cards (id, title, image_path, is_published) values
   (:'card_pub',   'Pub',   'identify/a.png', true),
   (:'card_draft', 'Draft', 'identify/b.png', false);
-insert into public.id_card_organ_systems (card_id, organ_system_id) values
-  (:'card_pub', :cardio), (:'card_draft', :cardio);
+insert into public.id_card_labels (card_id, label_no, answer) values
+  (:'card_pub', 1, 'Frontal bone');
+insert into public.id_card_label_organ_systems (label_id, organ_system_id)
+  select id, :cardio from public.id_card_labels where card_id = :'card_pub';
+select id as label1 from public.id_card_labels where card_id = :'card_pub' \gset
 
 set local role authenticated;
 select set_config('request.jwt.claims', json_build_object('sub', :'student')::text, true);
 
-select ok((select count(*) from public.organ_systems) >= 13,
+select ok((select count(*) from public.organ_systems) >= 14,
   'students can read the organ system list');
 select is((select count(*)::int from public.question_organ_systems where question_id = :'q_pub'), 1,
   'students see tags on published exams');
@@ -47,12 +50,12 @@ select throws_ok(
   $$insert into public.organ_systems (slug, name_th, name_en) values ('x', 'x', 'x')$$,
   '42501', null, 'students cannot add organ systems');
 
-select is((select count(*)::int from public.id_card_organ_systems), 1,
-  'students see card tags only on published cards');
+select is((select count(*)::int from public.id_card_label_organ_systems), 0,
+  'students cannot read label tags, even on published cards');
 select throws_ok(
-  format('insert into public.id_card_organ_systems values (%L, %s)', :'card_draft',
+  format('insert into public.id_card_label_organ_systems values (%L, %s)', :'label1',
     (select id from public.organ_systems where slug = 'renal')),
-  '42501', null, 'students cannot tag cards');
+  '42501', null, 'students cannot tag labels');
 
 select * from finish();
 rollback;

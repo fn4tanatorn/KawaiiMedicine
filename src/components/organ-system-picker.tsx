@@ -7,6 +7,8 @@ export function OrganSystemPicker({
   checked,
   onToggle,
   disabled,
+  name = "organ_system",
+  legend = "ระบบอวัยวะ (organ system)",
 }: {
   systems: OrganSystem[];
   selected?: number[];
@@ -14,10 +16,13 @@ export function OrganSystemPicker({
   checked?: number[];
   onToggle?: (id: number) => void;
   disabled?: boolean;
+  name?: string;
+  /** Pass null to hide (e.g. when the row already names the item). */
+  legend?: string | null;
 }) {
   return (
     <fieldset className="space-y-1" disabled={disabled}>
-      <legend className="text-sm font-medium">ระบบอวัยวะ (organ system)</legend>
+      {legend && <legend className="text-sm font-medium">{legend}</legend>}
       <div className="flex flex-wrap gap-2">
         {systems.map((s) => (
           <label
@@ -27,7 +32,7 @@ export function OrganSystemPicker({
           >
             <input
               type="checkbox"
-              name="organ_system"
+              name={name}
               value={s.id}
               {...(checked
                 ? {

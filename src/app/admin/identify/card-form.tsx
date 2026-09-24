@@ -96,6 +96,7 @@ export function CardForm({ organSystems }: { organSystems: OrganSystem[] }) {
       </label>
       <OrganSystemPicker
         systems={organSystems}
+        legend="ระบบอวัยวะ (ใช้กับทุกข้อ แก้รายข้อได้ทีหลัง)"
         checked={systemIds}
         onToggle={(id) =>
           setSystemIds((ids) =>
