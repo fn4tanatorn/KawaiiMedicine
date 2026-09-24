@@ -3,7 +3,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "./database.types";
 
 /** Paths that require a signed-in user. */
-const PROTECTED_PREFIXES = ["/learn", "/exam", "/admin", "/profile"];
+const PROTECTED_PREFIXES = [
+  "/learn",
+  "/exam",
+  "/identify",
+  "/admin",
+  "/profile",
+];
 
 /**
  * Refreshes the Supabase auth session cookie on every request and

@@ -54,6 +54,7 @@ supabase migration new <name>
 ### Security rules that must hold
 
 - `choices.is_correct` is never readable by students. Students read choices via the `exam_choices` view. Do not add a student SELECT policy on `choices`.
+- `id_card_labels` (Identify answer keys) is staff-only too. Students never choose a question: `next_id_question()` picks one (60% wrong-never-right / 20% wrong-then-right / 20% new) and stores it in `id_pending`; `answer_id_label(text)` grades only that pending question, enforces the daily quota (5/day, 10/day after completing every published video) and is the only writer of `id_answers`.
 - Grading is done only by the `submit_exam_attempt(uuid)` RPC. Students have no UPDATE policy on `exam_attempts`.
 - Every new table gets RLS enabled and explicit policies in the same migration.
 - Students only ever see `is_published = true` content. Staff (`is_staff()`) see everything.

@@ -5,7 +5,7 @@ import type { Database } from "@/lib/supabase/database.types";
 import { LineNameModal, SNOOZE_COOKIE } from "./line-name-modal";
 import { NavLinks } from "./nav-links";
 import { ThemeToggle } from "./theme-toggle";
-import { IconExam, IconPlay, IconSettings, Logo } from "./icons";
+import { IconExam, IconTarget, IconPlay, IconSettings, Logo } from "./icons";
 
 type Role = Database["public"]["Enums"]["user_role"];
 
@@ -40,6 +40,11 @@ export async function AppHeader({
       href: "/exam",
       label: "ข้อสอบ",
       icon: <IconExam width={18} height={18} />,
+    },
+    {
+      href: "/identify",
+      label: "Identify",
+      icon: <IconTarget width={18} height={18} />,
     },
     ...(isStaff
       ? [

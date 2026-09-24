@@ -61,12 +61,12 @@
   นับเฉพาะผู้เรียนที่เริ่มเรียนคอร์สแล้ว (มี `video_progress` อย่างน้อย 1 แถว) —
   คนที่สมัครแล้วไม่เคยเปิดดูเลยไม่ถูกนับเป็น 0 ถ่วงค่าเฉลี่ย
 
-- [x] **Identify typing (prototype, admin-only beta)** — `/admin/identify`: อัปโหลดรูป
-  Netter-style ที่มีเลขกำกับบนรูป + เฉลยบรรทัดละข้อ (`1. Frontal bone | alt`), 1 การ์ด = 1 โจทย์
-  หลายช่อง. `/admin/identify/play` สุ่มการ์ด (กรอง anatomy/histology) → สุ่มถามทีละเลข → พิมพ์ตอบ →
-  ตรวจฝั่ง server ด้วย RPC `check_id_card()` (fuzzy แบบเดียวกับข้อสอบ). ตาราง `id_cards` +
-  `id_card_labels`, RLS admin-only ทั้งหมด. ยังไม่เก็บประวัติ/คะแนน; ถ้าจะเปิดให้นักเรียน
-  ต้องย้ายการตรวจเป็น security definer + ห้าม student อ่าน `id_card_labels`
+- [x] **Identify typing** — admin จัดการที่ `/admin/identify` (อัปรูป Netter-style ที่มีเลขกำกับ
+  + เฉลยบรรทัดละข้อ `1. Frontal bone | alt`, ปุ่มเผยแพร่/ซ่อน). นักเรียนเล่นที่ `/identify` (มีแค่ปุ่ม Start, เลือกการ์ด/ข้อเองไม่ได้):
+  DB สุ่มข้อ (1 ข้อ = 1 เลขบนการ์ด) ถ่วงน้ำหนัก 60% เคยผิด-ยังไม่เคยถูก / 20% เคยผิดแล้วถูก (ทวน) / 20% ข้อใหม่ (กลุ่มว่าง → แบ่งให้กลุ่มที่เหลือ) → ตรวจ fuzzy ฝั่ง DB. **โควต้า** 1 เลข = 1 ข้อ, 5 ข้อ/วัน
+  (Asia/Bangkok), 10 ข้อ/วัน เมื่อดูวิดีโอที่เผยแพร่ครบทุกคลิป, staff ไม่จำกัด.
+  ตาราง `id_cards`, `id_card_labels` (staff-only), `id_answers` (log/นับโควต้า);
+  `id_pending`; RPC `id_quota()`, `next_id_question()`, `answer_id_label()`
 
 ## Phase 7 — Medium effort, impact สูงสุดจาก survey
 

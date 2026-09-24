@@ -61,28 +61,20 @@ export async function deleteIdCard(formData: FormData) {
   redirect("/admin/identify?ok=" + encodeURIComponent("ลบการ์ดแล้ว"));
 }
 
-export type IdCheckResult = {
-  label_no: number;
-  answer: string;
-  given: string;
-  is_correct: boolean;
-}[];
-
-export async function checkIdCard(
-  cardId: string,
-  labelNo: number,
-  answer: string,
-): Promise<
-  { ok: true; result: IdCheckResult[number] } | { ok: false; error: string }
-> {
-  const { supabase } = await requireAdmin("/admin/identify/play");
-  const { data, error } = await supabase.rpc("check_id_card", {
-    p_card_id: cardId,
-    p_answers: { [labelNo]: answer },
-  });
-  if (error || !data) return { ok: false, error: "ตรวจคำตอบไม่สำเร็จ" };
-  // Return only the asked label so other answers never reach the browser.
-  const result = data.find((r) => r.label_no === labelNo);
-  if (!result) return { ok: false, error: "ไม่พบหมายเลขนี้" };
-  return { ok: true, result };
+export async function setIdCardPublished(formData: FormData) {
+  const { supabase } = await requireAdmin("/admin/identify");
+  const id = formData.get("id")?.toString() ?? "";
+  const publish = formData.get("publish") === "true";
+  const { error } = await supabase
+    .from("id_cards")
+    .update({ is_published: publish })
+    .eq("id", id);
+  revalidatePath("/admin/identify");
+  revalidatePath("/identify");
+  redirect(
+    "/admin/identify?" +
+      (error
+        ? "error=" + encodeURIComponent("อัปเดตไม่สำเร็จ")
+        : "ok=" + encodeURIComponent(publish ? "เผยแพร่แล้ว" : "ซ่อนแล้ว")),
+  );
 }
