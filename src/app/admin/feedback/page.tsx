@@ -57,6 +57,85 @@ export default async function AdminFeedbackPage({
 
       <section className="space-y-4">
         <div className="flex flex-wrap items-end justify-between gap-4">
+          <h2 className="text-lg font-semibold">Feedback คอร์ส</h2>
+          <form method="get" className="flex items-center gap-2 text-sm">
+            <select name="course" defaultValue={courseId} className={input}>
+              <option value="">ทุกคอร์ส</option>
+              {courses?.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.title}
+                </option>
+              ))}
+            </select>
+            <button
+              type="submit"
+              className="rounded-lg border border-line px-3 py-2 hover:bg-surface-2"
+            >
+              กรอง
+            </button>
+          </form>
+        </div>
+
+        {!courseRows?.length ? (
+          <EmptyState mood="sleepy" title="ยังไม่มี feedback คอร์ส" />
+        ) : (
+          <ul className="space-y-3">
+            {courseRows.map((r) => (
+              <li key={r.id} className={card}>
+                <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                  <span>
+                    <span className="font-medium">
+                      {r.profiles?.full_name ||
+                        r.profiles?.email ||
+                        "ไม่ทราบชื่อ"}
+                    </span>
+                    <span className="text-ink-2">
+                      {" "}
+                      · {r.profiles?.email}
+                      {r.profiles?.line_name
+                        ? ` · LINE: ${r.profiles.line_name}`
+                        : ""}
+                    </span>
+                  </span>
+                  <span className="text-ink-2">
+                    {formatDateTime(r.created_at)}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-ink-2">
+                  <Link
+                    href={`/learn/${r.courses?.slug}`}
+                    className="hover:underline"
+                  >
+                    {r.courses?.title}
+                  </Link>
+                </p>
+                {r.course_comment && (
+                  <div className="mt-3 text-sm">
+                    <p className="text-xs font-medium text-ink-2">
+                      1. ต่อเนื้อหาคอร์สนี้
+                    </p>
+                    <p className="mt-1 whitespace-pre-line">
+                      {r.course_comment}
+                    </p>
+                  </div>
+                )}
+                {r.general_comment && (
+                  <div className="mt-3 text-sm">
+                    <p className="text-xs font-medium text-ink-2">
+                      2. ต่อเว็บไซต์ / การเรียนในคลาส
+                    </p>
+                    <p className="mt-1 whitespace-pre-line">
+                      {r.general_comment}
+                    </p>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+      <section className="space-y-4">
+        <div className="flex flex-wrap items-end justify-between gap-4">
           <h2 className="text-lg font-semibold">Feedback ข้อสอบ</h2>
           <form method="get" className="flex items-center gap-2 text-sm">
             <select name="exam" defaultValue={examId} className={input}>
@@ -118,86 +197,6 @@ export default async function AdminFeedbackPage({
                       1. ต่อ EXAM ครั้งนี้
                     </p>
                     <p className="mt-1 whitespace-pre-line">{r.exam_comment}</p>
-                  </div>
-                )}
-                {r.general_comment && (
-                  <div className="mt-3 text-sm">
-                    <p className="text-xs font-medium text-ink-2">
-                      2. ต่อเว็บไซต์ / การเรียนในคลาส
-                    </p>
-                    <p className="mt-1 whitespace-pre-line">
-                      {r.general_comment}
-                    </p>
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section className="space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <h2 className="text-lg font-semibold">Feedback คอร์ส</h2>
-          <form method="get" className="flex items-center gap-2 text-sm">
-            <select name="course" defaultValue={courseId} className={input}>
-              <option value="">ทุกคอร์ส</option>
-              {courses?.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.title}
-                </option>
-              ))}
-            </select>
-            <button
-              type="submit"
-              className="rounded-lg border border-line px-3 py-2 hover:bg-surface-2"
-            >
-              กรอง
-            </button>
-          </form>
-        </div>
-
-        {!courseRows?.length ? (
-          <EmptyState mood="sleepy" title="ยังไม่มี feedback คอร์ส" />
-        ) : (
-          <ul className="space-y-3">
-            {courseRows.map((r) => (
-              <li key={r.id} className={card}>
-                <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                  <span>
-                    <span className="font-medium">
-                      {r.profiles?.full_name ||
-                        r.profiles?.email ||
-                        "ไม่ทราบชื่อ"}
-                    </span>
-                    <span className="text-ink-2">
-                      {" "}
-                      · {r.profiles?.email}
-                      {r.profiles?.line_name
-                        ? ` · LINE: ${r.profiles.line_name}`
-                        : ""}
-                    </span>
-                  </span>
-                  <span className="text-ink-2">
-                    {formatDateTime(r.created_at)}
-                  </span>
-                </div>
-                <p className="mt-1 text-xs text-ink-2">
-                  <Link
-                    href={`/learn/${r.courses?.slug}`}
-                    className="hover:underline"
-                  >
-                    {r.courses?.title}
-                  </Link>
-                </p>
-                {r.course_comment && (
-                  <div className="mt-3 text-sm">
-                    <p className="text-xs font-medium text-ink-2">
-                      1. ต่อเนื้อหาคอร์สนี้
-                    </p>
-                    <p className="mt-1 whitespace-pre-line">
-                      {r.course_comment}
-                    </p>
                   </div>
                 )}
                 {r.general_comment && (
