@@ -1059,9 +1059,9 @@ export type Database = {
           students: number
         }[]
       }
-      id_daily_limit: { Args: never; Returns: number | null }
+      id_daily_limit: { Args: { p_as_student?: boolean }; Returns: number | null }
       id_item_groups: {
-        Args: never
+        Args: { p_as_student?: boolean }
         Returns: {
           card_id: string
           grp: number
@@ -1069,7 +1069,7 @@ export type Database = {
         }[]
       }
       id_quota: {
-        Args: never
+        Args: { p_as_student?: boolean }
         Returns: {
           daily_limit: number | null
           used: number
@@ -1077,7 +1077,7 @@ export type Database = {
       }
       is_staff: { Args: never; Returns: boolean }
       next_id_question: {
-        Args: { p_card_id?: string }
+        Args: { p_as_student?: boolean; p_card_id?: string }
         Returns: {
           card_id: string
           label_no: number

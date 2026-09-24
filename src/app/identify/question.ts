@@ -18,18 +18,23 @@ export type IdQuestionResult =
   | { kind: "empty" }
   | { kind: "error"; message: string };
 
+/** Staff-only cookie: play Identify exactly as a student would. */
+export const STUDENT_MODE_COOKIE = "id_student_mode";
+
 /**
  * The caller's current question. The DB picks it (weighted review order) and
  * keeps it pending, so reloading doesn't re-roll. cardId: staff-only override.
+ * asStudent: staff get only published cards/labels and the student limit.
  */
 export async function loadIdQuestion(
   supabase: SupabaseClient<Database>,
   cardId?: string,
+  asStudent = false,
 ): Promise<IdQuestionResult> {
-  const { data, error } = await supabase.rpc(
-    "next_id_question",
-    cardId ? { p_card_id: cardId } : {},
-  );
+  const { data, error } = await supabase.rpc("next_id_question", {
+    ...(cardId ? { p_card_id: cardId } : {}),
+    ...(asStudent ? { p_as_student: true } : {}),
+  });
   if (error?.code === "P0001") return { kind: "limit" };
   if (error) {
     console.error("next_id_question failed", error);

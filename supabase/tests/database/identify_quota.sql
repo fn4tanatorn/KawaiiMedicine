@@ -6,7 +6,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(20);
+select plan(23);
 
 select gen_random_uuid() as student \gset
 select gen_random_uuid() as student2 \gset
@@ -140,6 +140,15 @@ select set_config('request.jwt.claims', json_build_object('sub', :'admin_user'):
 select is((select daily_limit from public.id_quota()), null::integer, 'staff have no limit');
 select is((select card_id from public.next_id_question(:'card_draft')), :'card_draft'::uuid,
   'staff can force a specific card');
+
+-- Student mode: staff get what a student gets. The pending draft-card
+-- question from the forced pick above must not be re-served.
+select is((select daily_limit from public.id_quota(true)), 5,
+  'student mode applies the student limit');
+select q.card_id as sm_card, q.label_no as sm_label
+from public.next_id_question(null, true) q \gset
+select is(:'sm_card'::uuid, :'card_pub'::uuid, 'student mode serves only published cards');
+select ok(:'sm_label'::integer <= 3, 'student mode never serves hidden labels');
 
 select * from finish();
 rollback;

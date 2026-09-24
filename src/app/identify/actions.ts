@@ -1,7 +1,13 @@
 "use server";
 
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/require-user";
-import { loadIdQuestion, type IdQuestionResult } from "./question";
+import {
+  loadIdQuestion,
+  STUDENT_MODE_COOKIE,
+  type IdQuestionResult,
+} from "./question";
 
 export type IdAnswerResult = {
   card_id: string;
@@ -37,5 +43,23 @@ export async function answerIdQuestion(
 /** Next question picked by the server; the client never chooses. */
 export async function nextIdQuestion(): Promise<IdQuestionResult> {
   const { supabase } = await requireUser("/identify");
-  return loadIdQuestion(supabase);
+  // Only has an effect for staff; the RPC ignores it for students.
+  const asStudent = (await cookies()).get(STUDENT_MODE_COOKIE)?.value === "1";
+  return loadIdQuestion(supabase, undefined, asStudent);
+}
+
+/** Staff toggle for "play as a student". */
+export async function setStudentMode(formData: FormData) {
+  await requireUser("/identify");
+  const on = formData.get("on") === "1";
+  const jar = await cookies();
+  if (on)
+    jar.set(STUDENT_MODE_COOKIE, "1", {
+      path: "/identify",
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 30,
+    });
+  else jar.delete({ name: STUDENT_MODE_COOKIE, path: "/identify" });
+  redirect("/identify");
 }
