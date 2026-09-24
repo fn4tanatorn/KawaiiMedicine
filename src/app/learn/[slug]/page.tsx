@@ -2,14 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth/require-user";
-import { formatDuration, pct } from "@/lib/format";
+import { formatDuration } from "@/lib/format";
+import { PACE_TARGET_PCT, coursePace } from "@/lib/pace";
 import { alert, badge, card } from "@/components/ui";
 import { EmptyState } from "@/components/empty-state";
 import { FileList } from "@/components/file-list";
-
-/** The pace, informally agreed with students, at which a new video goes
- *  out once the class-wide average completion for the course reaches it. */
-const PACE_TARGET_PCT = 60;
 
 export async function generateMetadata({
   params,
@@ -76,12 +73,7 @@ export default async function CoursePage({
   const allCompleted =
     videos.length > 0 && videos.every((v) => byVideo.get(v.id)?.completed);
   const feedbackGiven = Boolean(courseFeedback);
-  const pace = paceRows?.[0];
-  // avg_completed is null until at least one student has started the course.
-  const paceInfo =
-    pace && pace.published_videos > 0 && pace.active_students > 0
-      ? { ...pace, pct: pct(pace.avg_completed, pace.published_videos) }
-      : null;
+  const paceInfo = coursePace(paceRows);
 
   return (
     <main>

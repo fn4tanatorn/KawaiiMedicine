@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { getProfile, requireUser } from "@/lib/auth/require-user";
+import { PACE_TARGET_PCT, coursePaces } from "@/lib/pace";
 import { alert, badge, btn, card } from "@/components/ui";
 import { EmptyState } from "@/components/empty-state";
 import { PageTitle } from "@/components/page-title";
@@ -32,6 +33,14 @@ export default async function LearnPage({ searchParams }: PageProps<"/learn">) {
 
   const done = new Set((progress ?? []).map((p) => p.video_id));
   const isStaff = profile?.role === "instructor" || profile?.role === "admin";
+  // Staff only: which courses' class average has reached the pace target,
+  // so the next video can go out without opening each course to check.
+  const paces = isStaff
+    ? await coursePaces(
+        supabase,
+        (courses ?? []).map((c) => c.id),
+      )
+    : new Map();
 
   return (
     <main>
@@ -81,11 +90,14 @@ export default async function LearnPage({ searchParams }: PageProps<"/learn">) {
             const pct = vids.length
               ? Math.round((finished / vids.length) * 100)
               : 0;
+            const pace = paces.get(c.id);
             return (
               <li key={c.id}>
                 <Link
                   href={`/learn/${c.slug}`}
-                  className={`${card} flex h-full gap-4 hover:border-brand/40`}
+                  className={`${card} flex h-full gap-4 hover:border-brand/40 ${
+                    pace?.ready ? "ring-2 ring-mint" : ""
+                  }`}
                 >
                   <TopicIcon index={i} title={c.title} size={48} />
                   <div className="min-w-0 flex-1">
@@ -114,6 +126,18 @@ export default async function LearnPage({ searchParams }: PageProps<"/learn">) {
                           style={{ width: `${pct}%` }}
                         />
                       </div>
+                    )}
+                    {pace && (
+                      <p
+                        className={`mt-3 text-xs ${
+                          pace.ready ? "font-semibold text-mint" : "text-ink-2"
+                        }`}
+                      >
+                        ทั้งห้องดูจบเฉลี่ย {pace.pct}% ({pace.active_students}{" "}
+                        คน)
+                        {pace.ready &&
+                          ` · ถึงเป้า ${PACE_TARGET_PCT}% แล้ว พร้อมลงคลิปใหม่`}
+                      </p>
                     )}
                   </div>
                 </Link>
