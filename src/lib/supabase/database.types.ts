@@ -865,9 +865,10 @@ export type Database = {
     }
     Functions: {
       answer_id_label: {
-        Args: { p_answer: string; p_card_id: string; p_label_no: number }
+        Args: { p_answer: string }
         Returns: {
           answer: string
+          card_id: string
           daily_limit: number | null
           given: string
           is_correct: boolean
@@ -886,7 +887,6 @@ export type Database = {
       }
       exam_is_open: { Args: { p_exam_id: string }; Returns: boolean }
       fuzzy_tolerance: { Args: { p_norm_key: string }; Returns: number }
-      id_card_label_nos: { Args: { p_card_id: string }; Returns: number[] }
       id_daily_limit: { Args: never; Returns: number | null }
       id_quota: {
         Args: never
@@ -942,6 +942,10 @@ export type Database = {
         }[]
       }
       is_staff: { Args: never; Returns: boolean }
+      next_id_question: {
+        Args: { p_card_id?: string }
+        Returns: { card_id: string; label_no: number }[]
+      }
       normalize_answer: { Args: { p: string }; Returns: string }
       submit_exam_attempt: {
         Args: { p_attempt_id: string }

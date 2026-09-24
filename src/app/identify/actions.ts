@@ -1,8 +1,10 @@
 "use server";
 
 import { requireUser } from "@/lib/auth/require-user";
+import { loadIdQuestion, type IdQuestionResult } from "./question";
 
 export type IdAnswerResult = {
+  card_id: string;
   label_no: number;
   answer: string;
   given: string;
@@ -11,10 +13,8 @@ export type IdAnswerResult = {
   used: number;
 };
 
-/** Grade one label; the RPC enforces the daily quota and logs the answer. */
-export async function answerIdLabel(
-  cardId: string,
-  labelNo: number,
+/** Grade the pending question; the RPC enforces the quota and logs it. */
+export async function answerIdQuestion(
   answer: string,
 ): Promise<
   | { ok: true; result: IdAnswerResult }
@@ -22,8 +22,6 @@ export async function answerIdLabel(
 > {
   const { supabase } = await requireUser("/identify");
   const { data, error } = await supabase.rpc("answer_id_label", {
-    p_card_id: cardId,
-    p_label_no: labelNo,
     p_answer: answer,
   });
   if (error?.code === "P0001")
@@ -34,4 +32,10 @@ export async function answerIdLabel(
     };
   if (error || !data?.[0]) return { ok: false, error: "ตรวจคำตอบไม่สำเร็จ" };
   return { ok: true, result: data[0] };
+}
+
+/** Next question picked by the server; the client never chooses. */
+export async function nextIdQuestion(): Promise<IdQuestionResult> {
+  const { supabase } = await requireUser("/identify");
+  return loadIdQuestion(supabase);
 }

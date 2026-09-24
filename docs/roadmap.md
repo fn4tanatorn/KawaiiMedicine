@@ -63,10 +63,10 @@
 
 - [x] **Identify typing** — admin จัดการที่ `/admin/identify` (อัปรูป Netter-style ที่มีเลขกำกับ
   + เฉลยบรรทัดละข้อ `1. Frontal bone | alt`, ปุ่มเผยแพร่/ซ่อน). นักเรียนเล่นที่ `/identify` (มีแค่ปุ่ม Start, เลือกการ์ด/ข้อเองไม่ได้):
-  สุ่มการ์ด → สุ่มถามทีละเลข → ตรวจ fuzzy ฝั่ง DB. **โควต้า** 1 เลข = 1 ข้อ, 5 ข้อ/วัน
+  DB สุ่มข้อ (1 ข้อ = 1 เลขบนการ์ด) ถ่วงน้ำหนัก 60% เคยผิด-ยังไม่เคยถูก / 20% เคยผิดแล้วถูก (ทวน) / 20% ข้อใหม่ (กลุ่มว่าง → แบ่งให้กลุ่มที่เหลือ) → ตรวจ fuzzy ฝั่ง DB. **โควต้า** 1 เลข = 1 ข้อ, 5 ข้อ/วัน
   (Asia/Bangkok), 10 ข้อ/วัน เมื่อดูวิดีโอที่เผยแพร่ครบทุกคลิป, staff ไม่จำกัด.
   ตาราง `id_cards`, `id_card_labels` (staff-only), `id_answers` (log/นับโควต้า);
-  RPC `id_quota()`, `id_card_label_nos()`, `answer_id_label()`
+  `id_pending`; RPC `id_quota()`, `next_id_question()`, `answer_id_label()`
 
 ## Phase 7 — Medium effort, impact สูงสุดจาก survey
 
