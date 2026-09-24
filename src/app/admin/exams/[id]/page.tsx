@@ -18,6 +18,7 @@ import {
 } from "../../actions";
 import { NewQuestionFields } from "./question-form-fields";
 import { BulkImageImport } from "./bulk-image-import";
+import { OrganSystemPicker } from "@/components/organ-system-picker";
 
 export const metadata: Metadata = { title: "แก้ไขข้อสอบ" };
 
@@ -31,16 +32,23 @@ export default async function AdminExamPage({
   const sp = await searchParams;
   const { supabase } = await requireStaff(`/admin/exams/${id}`);
 
-  const [{ data: exam }, { data: courses }] = await Promise.all([
-    supabase
-      .from("exams")
-      .select(
-        "id, slug, title, description, course_id, time_limit_minutes, passing_score, is_published, reveal_answers, fuzzy_matching, max_attempts, opens_at, closes_at, questions(id, kind, stem, image_path, explanation, points, position, choices(id, body, is_correct, position), answer_keys(id, answer, position))",
-      )
-      .eq("id", id)
-      .maybeSingle(),
-    supabase.from("courses").select("id, title").order("title"),
-  ]);
+  const [{ data: exam }, { data: courses }, { data: organSystems }] =
+    await Promise.all([
+      supabase
+        .from("exams")
+        .select(
+          "id, slug, title, description, course_id, time_limit_minutes, passing_score, is_published, reveal_answers, fuzzy_matching, max_attempts, opens_at, closes_at, questions(id, kind, stem, image_path, explanation, points, position, choices(id, body, is_correct, position), answer_keys(id, answer, position), question_organ_systems(organ_system_id))",
+        )
+        .eq("id", id)
+        .maybeSingle(),
+      supabase.from("courses").select("id, title").order("title"),
+      supabase
+        .from("organ_systems")
+        .select("id, name_th, name_en")
+        .order("position"),
+    ]);
+  const systems = organSystems ?? [];
+  const systemName = new Map(systems.map((s) => [s.id, s.name_en]));
   if (!exam) notFound();
 
   const questions = [...exam.questions]
@@ -49,6 +57,7 @@ export default async function AdminExamPage({
       ...q,
       choices: [...q.choices].sort((a, b) => a.position - b.position),
       answer_keys: [...q.answer_keys].sort((a, b) => a.position - b.position),
+      systemIds: q.question_organ_systems.map((t) => t.organ_system_id),
     }));
   const imageUrls = await signQuestionImages(
     supabase,
@@ -113,6 +122,11 @@ export default async function AdminExamPage({
                             {q.image_path && (
                               <span className={badge.gray}>มีภาพ</span>
                             )}
+                            {q.systemIds.map((sid) => (
+                              <span key={sid} className={badge.blue}>
+                                {systemName.get(sid)}
+                              </span>
+                            ))}
                           </div>
                           <p className="mt-2 whitespace-pre-line font-medium">
                             {q.stem}
@@ -250,6 +264,10 @@ export default async function AdminExamPage({
                                   })}
                                 </fieldset>
                               )}
+                              <OrganSystemPicker
+                                systems={systems}
+                                selected={q.systemIds}
+                              />
                               <label className={label}>
                                 <span>คำอธิบายเฉลย (แสดงหลังส่งข้อสอบ)</span>
                                 <textarea
@@ -351,6 +369,7 @@ export default async function AdminExamPage({
                 <span>ภาพประกอบ (ไม่บังคับ)</span>
                 <ImageField examId={exam.id} />
               </div>
+              <OrganSystemPicker systems={systems} />
               <label className={label}>
                 <span>คำอธิบายเฉลย (ไม่บังคับ)</span>
                 <textarea name="explanation" rows={2} className={input} />
@@ -375,7 +394,7 @@ export default async function AdminExamPage({
           <section className={card}>
             <h2 className="font-semibold">นำเข้าคำถามภาพจากชื่อไฟล์</h2>
             <div className="mt-4">
-              <BulkImageImport examId={exam.id} />
+              <BulkImageImport examId={exam.id} organSystems={systems} />
             </div>
           </section>
         </div>

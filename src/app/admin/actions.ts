@@ -519,6 +519,39 @@ function readKind(
   return str(formData, "kind") === "text" ? "text" : "choice";
 }
 
+/** Organ-system tag ids from the checkbox group (name="organ_system"). */
+function readOrganSystems(formData: FormData) {
+  return [
+    ...new Set(
+      formData
+        .getAll("organ_system")
+        .map((v) => Number(v))
+        .filter((n) => Number.isInteger(n) && n > 0),
+    ),
+  ];
+}
+
+/** Replace a set of questions' organ-system tags with `systemIds`. */
+async function setOrganSystems(
+  supabase: Awaited<ReturnType<typeof requireStaff>>["supabase"],
+  questionIds: string[],
+  systemIds: number[],
+) {
+  const { error } = await supabase
+    .from("question_organ_systems")
+    .delete()
+    .in("question_id", questionIds);
+  if (error || systemIds.length === 0) return error;
+  const { error: insErr } = await supabase
+    .from("question_organ_systems")
+    .insert(
+      questionIds.flatMap((question_id) =>
+        systemIds.map((organ_system_id) => ({ question_id, organ_system_id })),
+      ),
+    );
+  return insErr;
+}
+
 /** Only accept image paths inside this exam's folder (uploaded by ImageField). */
 function readImagePath(formData: FormData, examId: string) {
   const p = optStr(formData, "image_path");
@@ -586,6 +619,10 @@ export async function createQuestion(formData: FormData) {
       ),
     );
   }
+  if (await setOrganSystems(supabase, [q.id], readOrganSystems(formData)))
+    redirect(
+      withMsg(path, "error", "เพิ่มคำถามแล้ว แต่บันทึกระบบอวัยวะไม่สำเร็จ"),
+    );
   revalidatePath(path);
   redirect(withMsg(path, "ok", "เพิ่มคำถามแล้ว") + `#q-${q.id}`);
 }
@@ -670,6 +707,8 @@ export async function updateQuestion(formData: FormData) {
     })
     .eq("id", id);
   if (error) redirect(withMsg(path, "error", "บันทึกไม่สำเร็จ"));
+  if (await setOrganSystems(supabase, [id], readOrganSystems(formData)))
+    redirect(withMsg(path, "error", "บันทึกระบบอวัยวะไม่สำเร็จ"));
 
   if (current.image_path && current.image_path !== imagePath) {
     await supabase.storage.from("question-images").remove([current.image_path]);
@@ -812,8 +851,11 @@ export async function bulkCreateTextQuestions(input: {
   stem: string;
   points: number;
   explanation: string | null;
+  organSystemIds?: number[];
   items: { imagePath: string; answers: string[] }[];
-}): Promise<{ ok: true; created: number } | { ok: false; error: string }> {
+}): Promise<
+  { ok: true; created: number; warning?: string } | { ok: false; error: string }
+> {
   const { supabase } = await requireStaff();
   const stem = input.stem.trim();
   if (!stem) return { ok: false, error: "กรุณากรอกโจทย์" };
@@ -883,6 +925,27 @@ export async function bulkCreateTextQuestions(input: {
         qs.map((q) => q.id),
       );
     return { ok: false, error: "บันทึกเฉลยไม่สำเร็จ" };
+  }
+  const systemIds = [
+    ...new Set(
+      (input.organSystemIds ?? []).filter((n) => Number.isInteger(n) && n > 0),
+    ),
+  ];
+  if (
+    systemIds.length &&
+    (await setOrganSystems(
+      supabase,
+      qs.map((q) => q.id),
+      systemIds,
+    ))
+  ) {
+    // Questions and images are saved; don't let the client roll back uploads.
+    revalidatePath(`/admin/exams/${input.examId}`);
+    return {
+      ok: true,
+      created: qs.length,
+      warning: "แต่บันทึกระบบอวัยวะไม่สำเร็จ",
+    };
   }
 
   revalidatePath(`/admin/exams/${input.examId}`);

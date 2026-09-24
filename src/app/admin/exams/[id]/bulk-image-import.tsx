@@ -4,6 +4,10 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { bulkCreateTextQuestions } from "@/app/admin/actions";
+import {
+  OrganSystemPicker,
+  type OrganSystem,
+} from "@/components/organ-system-picker";
 import { btn, input, label } from "@/components/ui";
 
 const ACCEPT = "image/jpeg,image/png,image/webp,image/gif";
@@ -32,12 +36,19 @@ type Row = {
   error?: string;
 };
 
-export function BulkImageImport({ examId }: { examId: string }) {
+export function BulkImageImport({
+  examId,
+  organSystems,
+}: {
+  examId: string;
+  organSystems: OrganSystem[];
+}) {
   const router = useRouter();
   const [rows, setRows] = useState<Row[]>([]);
   const [stem, setStem] = useState("โครงสร้างที่ลูกศรชี้คืออะไร");
   const [points, setPoints] = useState("1");
   const [explanation, setExplanation] = useState("");
+  const [systemIds, setSystemIds] = useState<number[]>([]);
   const [phase, setPhase] = useState<
     "idle" | "uploading" | "saving" | "done" | "error"
   >("idle");
@@ -123,6 +134,7 @@ export function BulkImageImport({ examId }: { examId: string }) {
       stem,
       points: Number(points) || 1,
       explanation: explanation || null,
+      organSystemIds: systemIds,
       items: uploaded,
     });
     if (!res.ok) {
@@ -134,7 +146,7 @@ export function BulkImageImport({ examId }: { examId: string }) {
     }
     setPhase("done");
     setMsg(
-      `นำเข้าแล้ว ${res.created} ข้อ${uploaded.length < rows.length ? ` (ข้าม ${rows.length - uploaded.length} ไฟล์)` : ""}`,
+      `นำเข้าแล้ว ${res.created} ข้อ${uploaded.length < rows.length ? ` (ข้าม ${rows.length - uploaded.length} ไฟล์)` : ""}${res.warning ? ` ${res.warning}` : ""}`,
     );
     router.refresh();
   }
@@ -191,6 +203,16 @@ export function BulkImageImport({ examId }: { examId: string }) {
           />
         </label>
       </div>
+      <OrganSystemPicker
+        systems={organSystems}
+        checked={systemIds}
+        onToggle={(id) =>
+          setSystemIds((ids) =>
+            ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id],
+          )
+        }
+        disabled={busy}
+      />
       <label className={label}>
         <span>ไฟล์ภาพ (เลือกได้หลายไฟล์)</span>
         <input
