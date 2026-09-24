@@ -56,7 +56,7 @@ export async function requireStaff(nextPath?: string) {
     user,
     role,
     fullName: profile?.full_name ?? "",
-    lineName: profile?.line_name ?? null,
+    lineName: profile ? profile.line_name : undefined,
   };
 }
 
