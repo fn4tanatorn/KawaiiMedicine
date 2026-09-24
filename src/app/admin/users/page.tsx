@@ -13,6 +13,13 @@ const ROLE_LABEL = {
   admin: "ผู้ดูแลระบบ",
 } as const;
 
+const DEFAULT_INACTIVE_DAYS = 7;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function daysAgo(days: number): number {
+  return Date.now() - days * DAY_MS;
+}
+
 export default async function AdminUsersPage({
   searchParams,
 }: PageProps<"/admin/users">) {
@@ -23,7 +30,29 @@ export default async function AdminUsersPage({
     .select("id, full_name, email, line_name, role, created_at")
     .order("created_at", { ascending: false })
     .limit(500);
+  const { data: activity } = await supabase.rpc("get_user_last_active");
+  const lastActive = new Map(
+    (activity ?? []).map((a) => [a.user_id, a.last_active_at]),
+  );
   const isAdmin = role === "admin";
+
+  // Display-only flag for following up with students. Never feeds pace or
+  // class averages (see get_course_progress_pace).
+  const parsedDays = Number(sp.days);
+  const days =
+    Number.isInteger(parsedDays) && parsedDays > 0
+      ? parsedDays
+      : DEFAULT_INACTIVE_DAYS;
+  const onlyInactive = sp.only === "inactive";
+  const cutoff = daysAgo(days);
+  // Falls back to sign-up time so a brand-new account isn't flagged on day one.
+  const isInactive = (u: { id: string; created_at: string }) =>
+    new Date(lastActive.get(u.id) ?? u.created_at).getTime() < cutoff;
+  const students = (users ?? []).filter((u) => u.role === "student");
+  const inactiveCount = students.filter(isInactive).length;
+  const shown = onlyInactive
+    ? (users ?? []).filter((u) => u.role === "student" && isInactive(u))
+    : users;
 
   return (
     <main className="space-y-6">
@@ -37,6 +66,36 @@ export default async function AdminUsersPage({
       </div>
       <Flash ok={sp.ok} error={sp.error} />
 
+      <form className="flex flex-wrap items-center gap-2 text-sm">
+        <span className="text-ink-2">ไม่ active เกิน</span>
+        <input
+          type="number"
+          name="days"
+          min={1}
+          defaultValue={days}
+          className={`${input} w-20 py-1`}
+        />
+        <span className="text-ink-2">วัน</span>
+        <label className="ml-2 flex items-center gap-1.5">
+          <input
+            type="checkbox"
+            name="only"
+            value="inactive"
+            defaultChecked={onlyInactive}
+          />
+          แสดงเฉพาะผู้เรียนที่ไม่ active
+        </label>
+        <button
+          type="submit"
+          className="rounded-lg border border-line px-3 py-1 text-xs hover:bg-surface-2"
+        >
+          กรอง
+        </button>
+        <span className="text-ink-2">
+          ผู้เรียนไม่ active {inactiveCount}/{students.length} คน
+        </span>
+      </form>
+
       <div className="overflow-x-auto rounded-xl border border-line">
         <table className="w-full text-sm">
           <thead className="bg-surface-2 text-left text-xs text-ink-2">
@@ -45,12 +104,13 @@ export default async function AdminUsersPage({
               <th className="px-4 py-2 font-medium">อีเมล</th>
               <th className="px-4 py-2 font-medium">LINE</th>
               <th className="px-4 py-2 font-medium">สมัครเมื่อ</th>
+              <th className="px-4 py-2 font-medium">ใช้งานล่าสุด</th>
               <th className="px-4 py-2 font-medium">บทบาท</th>
               <th className="px-4 py-2 font-medium">จัดการ</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
-            {users?.map((u) => (
+            {shown?.map((u) => (
               <tr key={u.id}>
                 <td className="px-4 py-2 font-medium">
                   {u.full_name || <span className="text-muted">-</span>}
@@ -66,6 +126,16 @@ export default async function AdminUsersPage({
                 </td>
                 <td className="px-4 py-2 text-ink-2">
                   {formatDateTime(u.created_at)}
+                </td>
+                <td className="px-4 py-2 text-ink-2">
+                  {formatDateTime(lastActive.get(u.id)) || (
+                    <span className="text-muted">ยังไม่เคยเรียน</span>
+                  )}
+                  {u.role === "student" && isInactive(u) && (
+                    <span className={`${badge.amber} ml-2`}>
+                      ไม่ active {days}+ วัน
+                    </span>
+                  )}
                 </td>
                 <td className="px-4 py-2">
                   {isAdmin && u.id !== user.id ? (
