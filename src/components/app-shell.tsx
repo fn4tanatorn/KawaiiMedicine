@@ -21,7 +21,8 @@ export async function AppShell({
         user={user}
         role={profile?.role ?? "student"}
         fullName={profile?.full_name}
-        lineName={profile?.line_name ?? null}
+        // Profile lookup failed (e.g. token refresh race) = unknown, don't prompt.
+        lineName={profile ? profile.line_name : undefined}
       />
       <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6">
         {children}
