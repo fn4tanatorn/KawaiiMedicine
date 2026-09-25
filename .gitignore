@@ -43,3 +43,6 @@ next-env.d.ts
 
 # agent worktrees
 .claude/worktrees/
+
+# identify images (extracted locally from Netter PDF, uploaded to Supabase storage)
+data/identify/images/
