@@ -87,7 +87,8 @@ def generate_synonyms(ans: str) -> tuple[str, list[str]]:
             alts.add(without_paren)
 
         if suffix:
-            alts.add(f"{inside} {suffix}".strip())
+            if " of " not in prefix:
+                alts.add(f"{inside} {suffix}".strip())
             alts.add(f"{prefix} {inside} {suffix}".strip())
         else:
             alts.add(f"{prefix} {inside}".strip())
@@ -236,6 +237,25 @@ def extract_all(pdf_path: str, out_dir: str, dpi: int = 200, quality: int = 90, 
                 "answer": clean_ans,
                 "synonyms": syns,
             })
+
+        # Disambiguate / deduplicate synonyms within the same card
+        all_answers_lower = {l["answer"].lower().strip(): l["label_no"] for l in parsed_labels}
+        from collections import Counter
+        synonym_counts = Counter()
+        for l in parsed_labels:
+            for s in l["synonyms"]:
+                synonym_counts[s.lower().strip()] += 1
+
+        for l in parsed_labels:
+            valid_syns = []
+            for s in l["synonyms"]:
+                s_lower = s.lower().strip()
+                if s_lower in all_answers_lower and all_answers_lower[s_lower] != l["label_no"]:
+                    continue
+                if synonym_counts[s_lower] > 1:
+                    continue
+                valid_syns.append(s)
+            l["synonyms"] = valid_syns
 
         comment = fix_ligatures(" ".join(comment_lines))
 
