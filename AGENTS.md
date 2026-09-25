@@ -10,7 +10,12 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # KawaiiMedicine — MedEd platform (video lessons + exams)
 
-Medical-education web app. Two core features: **VDO** (course video lessons with progress tracking) and **EXAM** (multiple-choice exams with server-side grading).
+Medical-education web app. Core features:
+- **VDO** (`/learn`): course video lessons with progress tracking, 60% cohort completion milestone indicator, and downloadable PDF slide attachments.
+- **EXAM** (`/exam`): multiple-choice exams with server-side grading, self-paced open/close windows, and attempt limits.
+- **IDENTIFY** (`/identify`): anatomical flashcard typing runner with weighted spaced repetition (60% wrong-never-right / 20% wrong-then-right / 20% new), fuzzy matching, and daily quotas (5/day standard, 10/day after watching all published videos).
+- **LOUNGE** (`/lounge`): "มุมพักใจ" semi-private anonymous encouragement board with randomized cute animal aliases, 1-click mood picker, and 1-tap reactions (🤍 🫂 ☕ 💪).
+- **ADMIN & TELEMETRY** (`/admin`): curriculum & exam authoring, student directory with inactivity flags (`/admin/users`), learning time pace analytics (`/admin/learning-time`), and fire-and-forget menu usage telemetry (`/admin/menu-usage`).
 
 ## Stack
 
@@ -44,23 +49,27 @@ supabase migration new <name>
 
 - Client Components: `createClient()` from `src/lib/supabase/client.ts`
 - Server Components / Server Functions / Route Handlers: `await createClient()` from `src/lib/supabase/server.ts` (new client per request)
-- `src/proxy.ts` (Next 16 name for middleware) refreshes the session cookie and redirects anonymous users away from `/learn`, `/exam`, `/admin`. Do real authorization in the page/route with `supabase.auth.getUser()`, not only in the proxy.
+- `src/proxy.ts` (Next 16 name for middleware) refreshes the session cookie and redirects anonymous users away from protected routes (`/learn`, `/exam`, `/identify`, `/lounge`, `/admin`, `/profile`). Do real authorization in the page/route with `supabase.auth.getUser()`, not only in the proxy.
 
 ### Schema (see `supabase/migrations/`)
 
 - `profiles` (1:1 with `auth.users`, `role` = student | instructor | admin, auto-created by trigger)
-- `courses` → `videos` (source is `storage_path` in private `videos` bucket **or** `external_url`) ; `video_progress` per user
+- `courses` → `videos` (source is `storage_path` in private `videos` bucket **or** `external_url`) ; `video_progress` per user ; `video_watch_days` ; `course_files` → `video_files` (private `course-files` bucket)
 - `exams` → `questions` → `choices` ; `exam_attempts` → `attempt_answers`
-- Helpers: `is_staff()`, `current_user_role()` (security definer, safe to use in policies)
+- `id_cards` → `id_card_labels` (answer keys, staff-only) ; `id_pending` ; `id_answers` (quota/history log)
+- `lounge_posts` → `lounge_reactions` ; secure views `lounge_feed`, `lounge_post_reactions` (masking `user_id` for 100% student anonymity)
+- `menu_click_events` (non-blocking client telemetry via `trackMenuClick` / `navigator.sendBeacon`)
+- Helpers & RPCs: `is_staff()`, `current_user_role()`, `submit_exam_attempt()`, `next_id_question()`, `answer_id_label()`, `id_quota()`, `toggle_lounge_reaction()`, `get_course_progress_pace()`, `get_user_last_active()`, `get_menu_usage_stats()`
 
 ### Security rules that must hold
 
 - `choices.is_correct` is never readable by students. Students read choices via the `exam_choices` view. Do not add a student SELECT policy on `choices`.
 - `id_card_labels` (Identify answer keys) is staff-only too. Students never choose a question: `next_id_question()` picks one (60% wrong-never-right / 20% wrong-then-right / 20% new) and stores it in `id_pending`; `answer_id_label(text)` grades only that pending question, enforces the daily quota (5/day, 10/day after completing every published video) and is the only writer of `id_answers`.
+- `lounge_posts` & `lounge_reactions` student anonymity: students must NEVER query raw `lounge_posts.user_id` or `lounge_reactions.user_id`. Client feeds query strictly through security-definer views `lounge_feed` and `lounge_post_reactions` which omit `user_id` and expose only masked aliases and avatars.
 - Grading is done only by the `submit_exam_attempt(uuid)` RPC. Students have no UPDATE policy on `exam_attempts`.
 - Every new table gets RLS enabled and explicit policies in the same migration.
 - Students only ever see `is_published = true` content. Staff (`is_staff()`) see everything.
-- Video files live in the private `videos` bucket; serve with signed URLs, never public URLs.
+- Private storage buckets: `videos`, `course-files`, `question-images` live in private buckets; serve strictly with signed URLs, never public URLs.
 
 ### Auth
 
@@ -85,5 +94,5 @@ supabase migration new <name>
 - Prefer Server Components for data fetching; use Server Functions (`"use server"`) for mutations; keep the browser client for realtime/interactive bits only.
 - Route groups: `(public)` for marketing/login, `(app)` for signed-in student pages, `admin/` for staff.
 - UI text is Thai-first with English fallback where relevant (medical terms may stay English).
-- Run `npm run lint` and `npm run build` before committing.
+- Run `npm run check` (fast combined lint & typecheck) and `npm run build` before committing.
 - `docs/roadmap.md` tracks the feature roadmap derived from student survey feedback. Check it before starting new feature work, and update its status checkboxes/log when a roadmap item is picked up or shipped.
