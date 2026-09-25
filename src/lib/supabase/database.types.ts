@@ -606,6 +606,90 @@ export type Database = {
           },
         ]
       }
+      lounge_posts: {
+        Row: {
+          alias: string
+          content: string
+          created_at: string
+          id: string
+          is_anonymous: boolean
+          mood: string | null
+          user_id: string
+        }
+        Insert: {
+          alias?: string
+          content: string
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          mood?: string | null
+          user_id: string
+        }
+        Update: {
+          alias?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          mood?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lounge_posts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lounge_reactions: {
+        Row: {
+          created_at: string
+          emoji: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lounge_reactions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "lounge_feed"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lounge_reactions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "lounge_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lounge_reactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organ_systems: {
         Row: {
           id: number
@@ -985,6 +1069,43 @@ export type Database = {
           },
         ]
       }
+      lounge_feed: {
+        Row: {
+          author_name: string | null
+          content: string | null
+          created_at: string | null
+          id: string | null
+          is_anonymous: boolean | null
+          is_mine: boolean | null
+          mood: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      lounge_post_reactions: {
+        Row: {
+          count: number | null
+          emoji: string | null
+          has_reacted: boolean | null
+          post_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lounge_reactions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "lounge_feed"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lounge_reactions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "lounge_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       answer_distance: {
@@ -996,7 +1117,7 @@ export type Database = {
         Returns: {
           answer: string
           card_id: string
-          daily_limit: number | null
+          daily_limit: number
           given: string
           is_correct: boolean
           label_no: number
@@ -1066,7 +1187,7 @@ export type Database = {
           students: number
         }[]
       }
-      id_daily_limit: { Args: { p_as_student?: boolean }; Returns: number | null }
+      id_daily_limit: { Args: { p_as_student?: boolean }; Returns: number }
       id_item_groups: {
         Args: { p_as_student?: boolean }
         Returns: {
@@ -1078,7 +1199,7 @@ export type Database = {
       id_quota: {
         Args: { p_as_student?: boolean }
         Returns: {
-          daily_limit: number | null
+          daily_limit: number
           used: number
         }[]
       }
@@ -1111,6 +1232,10 @@ export type Database = {
       }
       text_answer_matches: {
         Args: { p_answer: string; p_question_id: string }
+        Returns: boolean
+      }
+      toggle_lounge_reaction: {
+        Args: { p_emoji: string; p_post_id: string }
         Returns: boolean
       }
     }

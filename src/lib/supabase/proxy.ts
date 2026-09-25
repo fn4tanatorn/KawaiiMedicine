@@ -7,6 +7,7 @@ const PROTECTED_PREFIXES = [
   "/learn",
   "/exam",
   "/identify",
+  "/lounge",
   "/admin",
   "/profile",
 ];
