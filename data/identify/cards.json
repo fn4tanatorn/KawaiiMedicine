@@ -2798,16 +2798,16 @@
         "label_no": 5,
         "answer": "Zone of ossification (primary spongiosa)",
         "synonyms": [
-          "Zone of ossification",
-          "Zone of ossification primary spongiosa"
+          "Zone of ossification primary spongiosa",
+          "Primary spongiosa"
         ]
       },
       {
         "label_no": 6,
         "answer": "Zone of ossification (secondary spongiosa)",
         "synonyms": [
-          "Zone of ossification",
-          "Zone of ossification secondary spongiosa"
+          "Zone of ossification secondary spongiosa",
+          "Secondary spongiosa"
         ]
       }
     ],
@@ -4913,16 +4913,16 @@
         "label_no": 1,
         "answer": "Pancreas (head)",
         "synonyms": [
-          "Pancreas",
-          "Pancreas head"
+          "Pancreas head",
+          "Head of pancreas"
         ]
       },
       {
         "label_no": 2,
         "answer": "Pancreas (tail)",
         "synonyms": [
-          "Pancreas",
-          "Pancreas tail"
+          "Pancreas tail",
+          "Tail of pancreas"
         ]
       },
       {
@@ -8503,8 +8503,8 @@
         "label_no": 6,
         "answer": "Lamina propria (loose connective tissue)",
         "synonyms": [
-          "Lamina propria",
-          "Lamina propria loose connective tissue"
+          "Lamina propria loose connective tissue",
+          "Loose connective tissue"
         ]
       }
     ],
@@ -8821,8 +8821,8 @@
         "answer": "Adventitia of the vas (ductus) deferens",
         "synonyms": [
           "Adventitia of the vas deferens",
-          "Adventitia of the vas ductus deferens",
-          "ductus deferens"
+          "Adventitia of ductus deferens",
+          "Adventitia"
         ]
       },
       {
@@ -8848,8 +8848,8 @@
         "answer": "Lumen of vas (ductus) deferens",
         "synonyms": [
           "Lumen of vas deferens",
-          "Lumen of vas ductus deferens",
-          "ductus deferens"
+          "Lumen of ductus deferens",
+          "Lumen"
         ]
       },
       {
@@ -9387,18 +9387,20 @@
         "label_no": 1,
         "answer": "Endometrium - early follicular (proliferative) phase",
         "synonyms": [
-          "Endometrium - early follicular phase",
-          "Endometrium - early follicular proliferative phase",
-          "proliferative phase"
+          "Early follicular phase",
+          "Early proliferative phase",
+          "Endometrium early proliferative phase",
+          "Endometrium early follicular phase"
         ]
       },
       {
         "label_no": 2,
         "answer": "Endometrium - late follicular (proliferative) phase",
         "synonyms": [
-          "Endometrium - late follicular phase",
-          "Endometrium - late follicular proliferative phase",
-          "proliferative phase"
+          "Late follicular phase",
+          "Late proliferative phase",
+          "Endometrium late proliferative phase",
+          "Endometrium late follicular phase"
         ]
       },
       {
@@ -9930,16 +9932,20 @@
         "label_no": 5,
         "answer": "Ciliary epithelium (inner, nonpigmented layer)",
         "synonyms": [
-          "Ciliary epithelium",
-          "Ciliary epithelium inner, nonpigmented layer"
+          "Inner nonpigmented ciliary epithelium",
+          "Nonpigmented ciliary epithelium",
+          "Inner nonpigmented layer",
+          "Ciliary epithelium inner nonpigmented layer"
         ]
       },
       {
         "label_no": 6,
         "answer": "Ciliary epithelium (outer, pigmented layer)",
         "synonyms": [
-          "Ciliary epithelium",
-          "Ciliary epithelium outer, pigmented layer"
+          "Outer pigmented ciliary epithelium",
+          "Pigmented ciliary epithelium",
+          "Outer pigmented layer",
+          "Ciliary epithelium outer pigmented layer"
         ]
       }
     ],

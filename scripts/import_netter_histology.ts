@@ -126,7 +126,8 @@ async function main() {
   for (const [idx, card] of toProcess.entries()) {
     const isAlreadyPresent =
       existingTitles.has(card.title.toLowerCase().trim()) ||
-      existingTitles.has(card.display_title.toLowerCase().trim());
+      existingTitles.has(card.display_title.toLowerCase().trim()) ||
+      (card.code === "6-5" && [...existingTitles].some((t) => t.includes("chondrocyte")));
 
     if (isAlreadyPresent) {
       console.log(
