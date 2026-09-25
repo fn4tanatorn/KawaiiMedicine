@@ -10,7 +10,9 @@ type TopicIconName =
   | "microscope"
   | "syringe"
   | "blood-cell"
-  | "capsule";
+  | "capsule"
+  | "stomach"
+  | "study";
 
 /** Title keywords (Thai + English) mapped to a specific icon, checked in order. */
 const KEYWORD_ICONS: [RegExp, TopicIconName][] = [
@@ -20,6 +22,8 @@ const KEYWORD_ICONS: [RegExp, TopicIconName][] = [
   [/blood|hemat|เลือด|โลหิต/i, "blood-cell"],
   [/pharm|drug|medicat|ยา|เภสัช/i, "capsule"],
   [/inject|vaccine|syringe|ฉีด|วัคซีน/i, "syringe"],
+  [/gastro|intestin|stomach|digest|gi|ทางเดินอาหาร|กระเพาะ|ลำไส้|ย่อย/i, "stomach"],
+  [/learn|study|ทบทวน|เทคนิค|เรียน/i, "study"],
   [/lab|micro|histolog|จุลชีพ|จุลกาย|ห้องปฏิบัติการ/i, "microscope"],
 ];
 
