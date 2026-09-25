@@ -22,7 +22,23 @@ supabase db push                                    # apply migrations
 npm run db:types                                    # regenerate TS types
 ```
 
-See [AGENTS.md](./AGENTS.md) for architecture, conventions, and security rules.
+## Commands
+
+```bash
+npm run dev        # start local dev server at http://localhost:3000
+npm run check      # fast combined lint & typecheck (eslint + tsc)
+npm run lint       # run ESLint
+npm run typecheck  # run TypeScript compiler check (tsc --noEmit)
+npm run build      # compile optimized production build
+npm run db:types   # regenerate src/lib/supabase/database.types.ts
+npm run db:push    # apply migrations to linked Supabase project
+```
+
+## Documentation & Architecture
+
+- [Architecture & Directory Map](docs/architecture.md) — Detailed breakdown of routes, components, data flows, and security policies.
+- [Feature Roadmap](docs/roadmap.md) — Living document tracking student survey priorities and implementation milestones.
+- [Agent Protocol & Rules](AGENTS.md) — Architecture, Next.js 16 conventions, and strict security rules.
 
 ## Deploy
 

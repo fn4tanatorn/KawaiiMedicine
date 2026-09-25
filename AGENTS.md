@@ -23,8 +23,10 @@ Medical-education web app. Two core features: **VDO** (course video lessons with
 
 ```bash
 npm run dev        # http://localhost:3000
-npm run build
+npm run check      # fast combined lint & typecheck (eslint + tsc)
 npm run lint
+npm run typecheck  # tsc --noEmit
+npm run build
 npm run db:types   # regenerate src/lib/supabase/database.types.ts from the linked project
 supabase db push   # apply supabase/migrations to the linked remote project
 supabase migration new <name>
