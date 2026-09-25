@@ -18,6 +18,7 @@ export default async function AdminHome() {
     examFeedback,
     courseFeedback,
     openReports,
+    menuClicks,
     recent,
   ] = await Promise.all([
     supabase.from("courses").select("id", { count: "exact", head: true }),
@@ -36,6 +37,9 @@ export default async function AdminHome() {
       .from("video_issue_reports")
       .select("id", { count: "exact", head: true })
       .eq("resolved", false),
+    supabase
+      .from("menu_click_events")
+      .select("id", { count: "exact", head: true }),
     supabase
       .from("exam_attempts")
       .select(
@@ -65,6 +69,11 @@ export default async function AdminHome() {
       label: "ปัญหาวิดีโอ",
       value: openReports.count ?? 0,
       href: "/admin/video-reports",
+    },
+    {
+      label: "สถิติเมนู",
+      value: menuClicks.count ?? 0,
+      href: "/admin/menu-usage",
     },
   ];
 

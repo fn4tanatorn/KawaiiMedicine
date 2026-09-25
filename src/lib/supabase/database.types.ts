@@ -690,6 +690,41 @@ export type Database = {
           },
         ]
       }
+      menu_click_events: {
+        Row: {
+          created_at: string
+          id: number
+          menu_key: string
+          path: string
+          source: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          menu_key: string
+          path: string
+          source?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          menu_key?: string
+          path?: string
+          source?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_click_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organ_systems: {
         Row: {
           id: number
@@ -1147,6 +1182,25 @@ export type Database = {
           active_students: number
           avg_completed: number
           published_videos: number
+        }[]
+      }
+      get_menu_daily_trends: {
+        Args: { p_days?: number }
+        Returns: {
+          click_date: string
+          menu_key: string
+          student_clicks: number
+          unique_students: number
+        }[]
+      }
+      get_menu_usage_stats: {
+        Args: { p_days?: number }
+        Returns: {
+          last_clicked_at: string
+          menu_key: string
+          student_clicks: number
+          total_clicks: number
+          unique_students: number
         }[]
       }
       get_my_streak: {

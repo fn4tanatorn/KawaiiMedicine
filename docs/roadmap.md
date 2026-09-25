@@ -82,6 +82,11 @@
   และ Reaction แตะส่งพลังใจ (🤍 🫂 ☕ 💪). ตาราง `lounge_posts`, `lounge_reactions`, view ปลอดภัย `lounge_feed`,
   `lounge_post_reactions`, และ RPC `toggle_lounge_reaction()`
 
+- [x] **ระบบติดตามสถิติการใช้งานเมนู (Menu Usage Tracking & Lifecycle Evaluation)** — บันทึกการคลิกเมนูหลักของผู้ใช้
+  (`menu_click_events`) แบบ non-blocking fire-and-forget ผ่าน `trackMenuClick()` / `navigator.sendBeacon`
+  และหน้าวิเคราะห์ `/admin/menu-usage` เพื่อประเมินสัดส่วนการคลิก (Click share), จำนวนผู้ใช้งานจริง (Unique students),
+  และ Feature Conversion เพื่อวางแผนปรับปรุงหรือถอนเมนูในอนาคต — RPC `get_menu_usage_stats()`
+
 
 ## Phase 7 — Medium effort, impact สูงสุดจาก survey
 
@@ -132,3 +137,5 @@
 - 2026-09-24 — `/admin/users`: คอลัมน์ "ใช้งานล่าสุด" + badge ผู้เรียนที่ไม่ active เกิน N วัน (ค่าเริ่มต้น 7, ปรับได้) + ตัวกรอง — RPC `get_user_last_active()` (staff-only). ใช้ดูเพื่อตามนักเรียนเท่านั้น ไม่เอาไปกรองออกจาก pace/ค่าเฉลี่ย — PR #29, `supabase db push` แล้ว
 - 2026-09-25 — นำเข้าการ์ด Netter Histology Flashcards ครบชุด 223 ใบ (1,343 ข้อคำถาม) เข้าสู่ระบบ Identify typing พร้อม tag ระบบอวัยวะและ synonyms ครบทุกบท (ข้าม 20 ใบเดิมที่เคยลงไว้ ไม่กระทบประวัตินักเรียน)
 - 2026-09-25 — เพิ่มเมนู "มุมพักใจ" (`/lounge`) ให้ผู้เรียนแลกเปลี่ยนเรื่องราว ถามไถ่ความรู้สึก และส่งกำลังใจให้กัน: โหมดไม่ระบุตัวตนสุ่มฉายาน่ารักๆ (แมวส้ม, เพนกวิน ฯลฯ) พร้อม Mood picker 1 คลิก และ Reaction แตะส่งใจ (🤍 🫂 ☕ 💪) แบบ low-effort — ตาราง `lounge_posts`, `lounge_reactions`, view ปลอดภัย `lounge_feed`, `lounge_post_reactions`, RPC `toggle_lounge_reaction`, `supabase db push` แล้ว
+- 2026-09-25 — เพิ่มระบบติดตามและวิเคราะห์สถิติการใช้งานเมนู (Menu Usage Tracking & Lifecycle Evaluation) ที่ `/admin/menu-usage`: บันทึก event การคลิกเมนู (`menu_click_events`) แบบ non-blocking beacon, แยกสถิตินักเรียน vs staff, แสดงสัดส่วนการคลิก (Click share), จำนวนผู้เรียนจริง (Unique students), ประเมินสถานะความนิยม/เสี่ยงถูกถอน, และตาราง Feature Conversion เทียบการกดเข้าเมนูกับกิจกรรมจริงในระบบ — `supabase db push` แล้ว
+

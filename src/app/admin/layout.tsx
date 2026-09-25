@@ -9,6 +9,7 @@ import {
   IconFlag,
   IconHome,
   IconPlay,
+  IconPointer,
   IconTarget,
   IconUsers,
 } from "@/components/icons";
@@ -39,6 +40,11 @@ const ADMIN_NAV = [
     href: "/admin/learning-time",
     label: "เวลาเรียน",
     icon: <IconClock width={16} height={16} />,
+  },
+  {
+    href: "/admin/menu-usage",
+    label: "สถิติเมนู",
+    icon: <IconPointer width={16} height={16} />,
   },
   {
     href: "/admin/feedback",
