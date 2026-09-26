@@ -15,7 +15,9 @@ Medical-education web app. Core features:
 - **EXAM** (`/exam`): multiple-choice exams with server-side grading, self-paced open/close windows, and attempt limits.
 - **IDENTIFY** (`/identify`): anatomical flashcard typing runner with weighted spaced repetition (60% wrong-never-right / 20% wrong-then-right / 20% new), fuzzy matching, and daily quotas (5/day standard, 10/day after watching all published videos).
 - **LOUNGE** (`/lounge`): "มุมพักใจ" semi-private anonymous encouragement board with randomized cute animal aliases, 1-click mood picker, and 1-tap reactions (🤍 🫂 ☕ 💪).
-- **ADMIN & TELEMETRY** (`/admin`): curriculum & exam authoring, student directory with inactivity flags (`/admin/users`), learning time pace analytics (`/admin/learning-time`), and fire-and-forget menu usage telemetry (`/admin/menu-usage`).
+- **DEMO** (`/demo`): zero-login public interactive demo showcasing Identify typing with vector SVG medical figures, clinical MCQ exam with detailed rationales, and video/slide preview before applying via Google Forms.
+- **CLASS ENROLLMENT GATE** (`/join`): closed cohort protection requiring secret class passcode (from LINE OpenChat note) and LINE nickname before granting student privileges (`enrolled: true`).
+- **ADMIN & TELEMETRY** (`/admin`): curriculum & exam authoring, student directory with enrollment status & inactivity flags (`/admin/users`), learning time pace analytics (`/admin/learning-time`), and fire-and-forget menu usage telemetry (`/admin/menu-usage`).
 
 ## Stack
 
@@ -53,7 +55,7 @@ supabase migration new <name>
 
 ### Schema (see `supabase/migrations/`)
 
-- `profiles` (1:1 with `auth.users`, `role` = student | instructor | admin, auto-created by trigger)
+- `profiles` (1:1 with `auth.users`, `role` = student | instructor | admin, `enrolled: boolean`, auto-created by trigger)
 - `courses` → `videos` (source is `storage_path` in private `videos` bucket **or** `external_url`) ; `video_progress` per user ; `video_watch_days` ; `course_files` → `video_files` (private `course-files` bucket)
 - `exams` → `questions` → `choices` ; `exam_attempts` → `attempt_answers`
 - `id_cards` → `id_card_labels` (answer keys, staff-only) ; `id_pending` ; `id_answers` (quota/history log)
@@ -69,6 +71,7 @@ supabase migration new <name>
 - Grading is done only by the `submit_exam_attempt(uuid)` RPC. Students have no UPDATE policy on `exam_attempts`.
 - Every new table gets RLS enabled and explicit policies in the same migration.
 - Students only ever see `is_published = true` content. Staff (`is_staff()`) see everything.
+- Class enrollment gate: `requireUser()` strictly redirects unenrolled students (`enrolled = false`) to `/join`. Only users with `enrolled = true` or staff (`is_staff()`) can access protected student routes. Passcode verification (`isValidClassCode`) checks `CLASS_INVITATION_CODE` (default `KAWAII2026`).
 - Private storage buckets: `videos`, `course-files`, `question-images` live in private buckets; serve strictly with signed URLs, never public URLs.
 
 ### Auth

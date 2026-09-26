@@ -19,24 +19,39 @@ export const getProfile = cache(async (userId: string) => {
   const { supabase } = await getSession();
   const { data } = await supabase
     .from("profiles")
-    .select("role, full_name, line_name")
+    .select("role, full_name, line_name, enrolled")
     .eq("id", userId)
     .single();
   return data;
 });
 
 /**
- * For Server Components / Server Functions on protected pages.
- * The proxy already redirects anonymous users, but always re-check here:
- * the proxy is an optimistic check, not the authorization boundary.
+ * For pages that require an authenticated user, but do NOT gate on class enrollment
+ * (e.g. /join where the user inputs the passcode to enroll).
  */
-export async function requireUser(nextPath?: string) {
+export async function requireSignedInUser(nextPath?: string) {
   const { supabase, user } = await getSession();
   if (!user) {
     const q = nextPath ? `?next=${encodeURIComponent(nextPath)}` : "";
     redirect(`/login${q}`);
   }
-  return { supabase, user };
+  const profile = await getProfile(user.id);
+  return { supabase, user, profile };
+}
+
+/**
+ * For Server Components / Server Functions on protected pages.
+ * Enforces that user is signed in AND enrolled in the class (or is staff).
+ * Unenrolled users are safely redirected to /join to enter the class passcode.
+ */
+export async function requireUser(nextPath?: string) {
+  const { supabase, user, profile } = await requireSignedInUser(nextPath);
+  const isStaff = profile?.role === "instructor" || profile?.role === "admin";
+  if (!isStaff && profile && !profile.enrolled) {
+    const q = nextPath && nextPath !== "/join" ? `?next=${encodeURIComponent(nextPath)}` : "";
+    redirect(`/join${q}`);
+  }
+  return { supabase, user, profile };
 }
 
 /**

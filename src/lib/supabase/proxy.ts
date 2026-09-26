@@ -10,6 +10,7 @@ const PROTECTED_PREFIXES = [
   "/lounge",
   "/admin",
   "/profile",
+  "/join",
 ];
 
 /**

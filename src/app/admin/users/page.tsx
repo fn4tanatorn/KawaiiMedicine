@@ -3,7 +3,8 @@ import { requireStaff } from "@/lib/auth/require-user";
 import { formatDateTime } from "@/lib/format";
 import { badge, btn, input } from "@/components/ui";
 import { Flash } from "@/components/flash";
-import { deleteUser, updateUserRole } from "../actions";
+import { getActiveClassCode } from "@/lib/auth/class-code";
+import { deleteUser, toggleUserEnrolled, updateUserRole } from "../actions";
 
 export const metadata: Metadata = { title: "ผู้ใช้" };
 
@@ -27,9 +28,10 @@ export default async function AdminUsersPage({
   const { supabase, role, user } = await requireStaff("/admin/users");
   const { data: users } = await supabase
     .from("profiles")
-    .select("id, full_name, email, line_name, role, created_at")
+    .select("id, full_name, email, line_name, role, enrolled, created_at")
     .order("created_at", { ascending: false })
     .limit(500);
+  const activeClassCode = getActiveClassCode();
   const { data: activity } = await supabase.rpc("get_user_last_active");
   const lastActive = new Map(
     (activity ?? []).map((a) => [a.user_id, a.last_active_at]),
@@ -65,6 +67,24 @@ export default async function AdminUsersPage({
         </p>
       </div>
       <Flash ok={sp.ok} error={sp.error} />
+
+      {/* Class Passcode Information Card */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand/30 bg-brand-soft/20 p-4">
+        <div className="space-y-0.5">
+          <span className="text-xs font-bold uppercase tracking-wider text-brand">
+            🔒 รหัสเข้าคลาสปัจจุบัน (Class Passcode)
+          </span>
+          <p className="text-xs text-ink-2">
+            แจกรหัสนี้ในโน้ตประกาศของกลุ่ม LINE OpenChat เท่านั้น เพื่อให้นักเรียนใหม่ใช้ปลดล็อกสิทธิ์เข้าเรียน
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-ink-2">รหัส:</span>
+          <code className="rounded-xl border border-brand/40 bg-surface px-3 py-1.5 font-mono text-base font-bold text-brand shadow-soft">
+            {activeClassCode}
+          </code>
+        </div>
+      </div>
 
       <form className="flex flex-wrap items-center gap-2 text-sm">
         <span className="text-ink-2">ไม่ active เกิน</span>
@@ -103,6 +123,7 @@ export default async function AdminUsersPage({
               <th className="px-4 py-2 font-medium">ชื่อ</th>
               <th className="px-4 py-2 font-medium">อีเมล</th>
               <th className="px-4 py-2 font-medium">LINE</th>
+              <th className="px-4 py-2 font-medium">สถานะคลาส</th>
               <th className="px-4 py-2 font-medium">สมัครเมื่อ</th>
               <th className="px-4 py-2 font-medium">ใช้งานล่าสุด</th>
               <th className="px-4 py-2 font-medium">บทบาท</th>
@@ -123,6 +144,42 @@ export default async function AdminUsersPage({
                   {u.line_name || (
                     <span className="text-lemon">ยังไม่กรอก</span>
                   )}
+                </td>
+                <td className="px-4 py-2">
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className={
+                        u.enrolled || u.role !== "student"
+                          ? badge.green
+                          : badge.amber
+                      }
+                    >
+                      {u.enrolled || u.role !== "student"
+                        ? "เข้าคลาสแล้ว"
+                        : "รอรหัสคลาส"}
+                    </span>
+                    {u.role === "student" && (
+                      <form action={toggleUserEnrolled}>
+                        <input type="hidden" name="id" value={u.id} />
+                        <input
+                          type="hidden"
+                          name="enrolled"
+                          value={String(u.enrolled)}
+                        />
+                        <button
+                          type="submit"
+                          title={
+                            u.enrolled
+                              ? "คลิกเพื่อระงับสิทธิ์เข้าคลาส"
+                              : "คลิกเพื่ออนุมัติเข้าคลาสทันที"
+                          }
+                          className="text-[11px] text-ink-2 hover:text-brand underline ml-1"
+                        >
+                          {u.enrolled ? "ระงับ" : "อนุมัติ"}
+                        </button>
+                      </form>
+                    )}
+                  </div>
                 </td>
                 <td className="px-4 py-2 text-ink-2">
                   {formatDateTime(u.created_at)}

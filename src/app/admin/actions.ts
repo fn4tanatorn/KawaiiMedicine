@@ -792,6 +792,25 @@ export async function updateUserRole(formData: FormData) {
   redirect(withMsg("/admin/users", "ok", "เปลี่ยนบทบาทแล้ว"));
 }
 
+export async function toggleUserEnrolled(formData: FormData) {
+  const { supabase } = await requireStaff("/admin/users");
+  const id = str(formData, "id");
+  const currentlyEnrolled = str(formData, "enrolled") === "true";
+  const { error } = await supabase
+    .from("profiles")
+    .update({ enrolled: !currentlyEnrolled })
+    .eq("id", id);
+  if (error) redirect(withMsg("/admin/users", "error", "ปรับสถานะไม่สำเร็จ"));
+  revalidatePath("/admin/users");
+  redirect(
+    withMsg(
+      "/admin/users",
+      "ok",
+      !currentlyEnrolled ? "อนุมัติสิทธิ์เข้าคลาสแล้ว" : "ยกเลิกสิทธิ์เข้าคลาสแล้ว",
+    ),
+  );
+}
+
 /**
  * Permanently deletes a user from Supabase Auth. Every row that belongs to
  * them (progress, learning time, attempts, answers, feedback, streaks) hangs

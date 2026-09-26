@@ -87,6 +87,7 @@
   (`menu_click_events`) แบบ non-blocking fire-and-forget ผ่าน `trackMenuClick()` / `navigator.sendBeacon`
   และหน้าวิเคราะห์ `/admin/menu-usage` เพื่อประเมินสัดส่วนการคลิก (Click share), จำนวนผู้ใช้งานจริง (Unique students),
   และ Feature Conversion เพื่อวางแผนปรับปรุงหรือถอนเมนูในอนาคต — RPC `get_menu_usage_stats()`
+- [x] **Public Interactive Demo สำหรับบุคคลภายนอก (`/demo`)** — Zero-login sandbox ให้บุคคลภายนอกทดลองเรียนก่อนกรอก Google Form: จำลอง 3 ระบบหลัก (Identify Netter typing พร้อม character-level diff, Exam MCQ พร้อมเฉลยละเอียดภาษาไทย, Video & PDF handout preview, และบรรยากาศ Lounge/Milestone 60%) พร้อมปุ่ม CTA ส่งตรงไปยัง Google Forms รับสมัคร
 
 
 ## Phase 7 — Medium effort, impact สูงสุดจาก survey
