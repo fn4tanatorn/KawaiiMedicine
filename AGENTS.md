@@ -11,7 +11,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 # KawaiiMedicine — MedEd platform (video lessons + exams)
 
 Medical-education web app. Core features:
-- **VDO** (`/learn`): course video lessons with progress tracking, 60% cohort completion milestone indicator, and downloadable PDF slide attachments.
+- **VDO** (`/learn`): course video lessons with progress tracking, 60% cohort completion milestone indicator (counting completed learners + active learners in last 14 days, excluding stalled inactive accounts), and downloadable PDF slide attachments.
 - **EXAM** (`/exam`): multiple-choice exams with server-side grading, self-paced open/close windows, and attempt limits.
 - **IDENTIFY** (`/identify`): anatomical flashcard typing runner with weighted spaced repetition (60% wrong-never-right / 20% wrong-then-right / 20% new), fuzzy matching, and daily quotas (5/day standard, 10/day after watching all published videos).
 - **LOUNGE** (`/lounge`): "มุมพักใจ" semi-private anonymous encouragement board with randomized cute animal aliases, 1-click mood picker, and 1-tap reactions (🤍 🫂 ☕ 💪).

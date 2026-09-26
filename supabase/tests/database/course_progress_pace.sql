@@ -8,7 +8,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(8);
+select plan(10);
 
 select gen_random_uuid() as student_a \gset
 select gen_random_uuid() as student_b \gset
@@ -104,6 +104,32 @@ select is(
   'a student who starts but finishes nothing does count, as a zero');
 
 delete from public.video_progress where user_id = :'student_d';
+
+-- An inactive student who hasn't finished (e.g. last touch > 14 days ago)
+-- must be excluded from the denominator so they don't drag down the 60% pace.
+insert into public.video_progress (user_id, video_id, completed, updated_at)
+values (:'student_d', :'video1', false, now() - interval '20 days');
+
+select is(
+  (select row(avg_completed, active_students)::text
+   from public.get_course_progress_pace(:'course_pub')),
+  row(1.5, 2)::text,
+  'a student who has not finished and has been inactive for > 14 days is excluded');
+
+delete from public.video_progress where user_id = :'student_d';
+
+-- But a student who finished ALL published videos must NEVER be excluded,
+-- even if their last touch was over 14 days ago.
+delete from public.video_progress where user_id = :'student_a';
+insert into public.video_progress (user_id, video_id, completed, updated_at) values
+  (:'student_a', :'video1', true, now() - interval '30 days'),
+  (:'student_a', :'video2', true, now() - interval '30 days');
+
+select is(
+  (select row(avg_completed, active_students)::text
+   from public.get_course_progress_pace(:'course_pub')),
+  row(1.5, 2)::text,
+  'a student who finished all videos remains counted even when inactive > 14 days');
 
 -- And when nobody has started at all, the function returns a null average
 -- with zero active students rather than a misleading 0%.

@@ -118,7 +118,7 @@ export default async function CoursePage({
           </div>
           <p className="mt-1.5 text-xs text-ink-2">
             คลิปใหม่จะลงเมื่อค่าเฉลี่ยถึง {PACE_TARGET_PCT}% · นับเฉพาะผู้เรียนที่
-            เริ่มเรียนคอร์สนี้แล้ว {paceInfo.active_students} คน
+            ดูจบแล้วหรือเข้าเรียนใน 14 วันล่าสุด {paceInfo.active_students} คน
           </p>
         </div>
       )}
