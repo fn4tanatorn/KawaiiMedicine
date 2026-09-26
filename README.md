@@ -38,6 +38,7 @@ npm run db:push    # apply migrations to linked Supabase project
 
 - [Architecture & Directory Map](docs/architecture.md) — Detailed breakdown of routes, components, data flows, and security policies.
 - [Feature Roadmap](docs/roadmap.md) — Living document tracking student survey priorities and implementation milestones.
+- [Class Registration Form Specification](docs/registration-form.md) — Canonical Google Forms structure, onboarding pipeline, and AI prompts.
 - [Agent Protocol & Rules](AGENTS.md) — Architecture, Next.js 16 conventions, and strict security rules.
 
 ## Deploy

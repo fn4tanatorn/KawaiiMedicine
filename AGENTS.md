@@ -99,3 +99,4 @@ supabase migration new <name>
 - UI text is Thai-first with English fallback where relevant (medical terms may stay English).
 - Run `npm run check` (fast combined lint & typecheck) and `npm run build` before committing.
 - `docs/roadmap.md` tracks the feature roadmap derived from student survey feedback. Check it before starting new feature work, and update its status checkboxes/log when a roadmap item is picked up or shipped.
+- `docs/registration-form.md` specifies the canonical student registration Google Form structure, closed cohort onboarding pipeline, and AI prompts.
