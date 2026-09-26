@@ -5,6 +5,10 @@ import { pct } from "./format";
  *  out once the class-wide average completion for the course reaches it. */
 export const PACE_TARGET_PCT = 60;
 
+/** Minimum gap between two releases in a course, so a brief spike in the
+ *  average can't drain the draft queue. */
+export const RELEASE_COOLDOWN_DAYS = 3;
+
 type PaceRow = {
   published_videos: number;
   avg_completed: number;
@@ -44,4 +48,43 @@ export async function coursePaces(
   return new Map(
     entries.filter((e): e is [string, CoursePace] => e[1] !== null),
   );
+}
+
+type QueueVideo = {
+  id: string;
+  position: number;
+  is_published: boolean;
+  published_at: string | null;
+};
+
+export type ReleaseState = {
+  /** First draft by position: the one "publish next" would release. */
+  next: string | null;
+  /** Drafts still waiting, in release order. */
+  queue: string[];
+  /** When the cooldown from the latest release ends, if it hasn't yet. */
+  cooldownUntil: Date | null;
+};
+
+/** Where a course stands in releasing its pre-loaded draft videos. */
+export function releaseState(
+  videos: QueueVideo[],
+  now: Date = new Date(),
+): ReleaseState {
+  const queue = videos
+    .filter((v) => !v.is_published)
+    .sort((a, b) => a.position - b.position)
+    .map((v) => v.id);
+  const lastMs = Math.max(
+    0,
+    ...videos
+      .filter((v) => v.is_published && v.published_at)
+      .map((v) => Date.parse(v.published_at!)),
+  );
+  const until = lastMs + RELEASE_COOLDOWN_DAYS * 86_400_000;
+  return {
+    next: queue[0] ?? null,
+    queue,
+    cooldownUntil: lastMs && until > now.getTime() ? new Date(until) : null,
+  };
 }
