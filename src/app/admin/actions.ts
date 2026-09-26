@@ -6,6 +6,7 @@ import { requireStaff } from "@/lib/auth/require-user";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { slugify } from "@/lib/format";
 import { fromBangkokLocalInput } from "@/lib/exam-status";
+import { PACE_TARGET_PCT, coursePaces, releaseState } from "@/lib/pace";
 import type { Database } from "@/lib/supabase/database.types";
 
 type Role = Database["public"]["Enums"]["user_role"];
@@ -245,6 +246,54 @@ export async function moveVideo(formData: FormData) {
   revalidatePath(path);
   revalidatePath("/learn");
   redirect(path);
+}
+
+/**
+ * Publish the next queued draft (lowest position) once the course pace has
+ * reached the target. Staff confirm each release; nothing publishes on its
+ * own. Pace and cooldown are re-checked here, not trusted from the page.
+ */
+export async function publishNextVideo(formData: FormData) {
+  const { supabase } = await requireStaff();
+  const courseId = str(formData, "course_id");
+  const path = `/admin/courses/${courseId}`;
+
+  const [{ data: vids }, paces] = await Promise.all([
+    supabase
+      .from("videos")
+      .select("id, title, position, is_published, published_at")
+      .eq("course_id", courseId),
+    coursePaces(supabase, [courseId]),
+  ]);
+  const state = releaseState(vids ?? []);
+  if (!state.next) redirect(withMsg(path, "error", "ไม่มีวิดีโอฉบับร่างในคิว"));
+  if (!paces.get(courseId)?.ready)
+    redirect(
+      withMsg(path, "error", `ค่าเฉลี่ยดูจบยังไม่ถึงเป้า ${PACE_TARGET_PCT}%`),
+    );
+  if (state.cooldownUntil)
+    redirect(
+      withMsg(
+        path,
+        "error",
+        `เพิ่งลงคลิปไป รอถึง ${state.cooldownUntil.toLocaleDateString("th-TH", { day: "numeric", month: "short", timeZone: "Asia/Bangkok" })} ก่อนลงคลิปถัดไป`,
+      ),
+    );
+
+  // is_published = false guard: a double click releases one video, not two.
+  const { data: released, error } = await supabase
+    .from("videos")
+    .update({ is_published: true })
+    .eq("id", state.next)
+    .eq("is_published", false)
+    .select("title")
+    .maybeSingle();
+  if (error || !released)
+    redirect(withMsg(path, "error", "ลงคลิปไม่สำเร็จ ลองใหม่อีกครั้ง"));
+
+  revalidatePath(path);
+  revalidatePath("/learn");
+  redirect(withMsg(path, "ok", `ลงคลิป "${released.title}" แล้ว`));
 }
 
 /** Called after a successful browser upload to register the row. Returns instead of redirecting. */

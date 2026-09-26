@@ -69,6 +69,13 @@
   เพื่อให้ staff กับนักเรียนเห็นว่า "ถึง 60%" ในจังหวะเดียวกัน. ไม่มี migration, ไม่มี push notification
   (ถ้าอยากได้ LINE/อีเมลทีหลัง: ตาราง milestone key `(course_id, published_videos)` + `pg_cron`)
 
+- [x] **คิวคลิป draft + ปุ่ม "ลงคลิปถัดไป" เมื่อถึง 60%** (คำขอ admin: ใส่คลิปไว้ล่วงหน้าแล้วเปิดตาม pace) —
+  admin อัปคลิปเป็นฉบับร่างไว้ก่อน เรียงลำดับด้วย `position`; หน้า `/admin/courses/[id]` ขึ้นแบนเนอร์
+  พร้อมปุ่มลงคลิป draft ตัวแรกของคิว (ครึ่งอัตโนมัติ: staff กดยืนยันเอง ไม่มี cron). server action
+  `publishNextVideo` ตรวจซ้ำฝั่งเซิร์ฟเวอร์ว่า pace ≥ 60% และพ้น cooldown 3 วันนับจากคลิปล่าสุด
+  (`RELEASE_COOLDOWN_DAYS`, `videos.published_at`) ลงครั้งละ 1 คลิป. ไม่มี migration.
+  ถ้าเชื่อตัวเลขแล้วอยากปล่อยเอง: เพิ่ม `courses.auto_release` + `pg_cron` เรียกตรรกะเดียวกัน
+
 - [x] **Identify typing** — admin จัดการที่ `/admin/identify` (อัปรูป Netter-style ที่มีเลขกำกับ
   + เฉลยบรรทัดละข้อ `1. Frontal bone | alt`, ปุ่มเผยแพร่/ซ่อน). นักเรียนเล่นที่ `/identify` (มีแค่ปุ่ม Start, เลือกการ์ด/ข้อเองไม่ได้):
   DB สุ่มข้อ (1 ข้อ = 1 เลขบนการ์ด) ถ่วงน้ำหนัก 60% เคยผิด-ยังไม่เคยถูก / 20% เคยผิดแล้วถูก (ทวน) / 20% ข้อใหม่ (กลุ่มว่าง → แบ่งให้กลุ่มที่เหลือ) → ตรวจ fuzzy ฝั่ง DB. **โควต้า** 1 เลข = 1 ข้อ, 5 ข้อ/วัน
@@ -141,4 +148,4 @@
 - 2026-09-25 — เพิ่มเมนู "มุมพักใจ" (`/lounge`) ให้ผู้เรียนแลกเปลี่ยนเรื่องราว ถามไถ่ความรู้สึก และส่งกำลังใจให้กัน: โหมดไม่ระบุตัวตนสุ่มฉายาน่ารักๆ (แมวส้ม, เพนกวิน ฯลฯ) พร้อม Mood picker 1 คลิก และ Reaction แตะส่งใจ (🤍 🫂 ☕ 💪) แบบ low-effort — ตาราง `lounge_posts`, `lounge_reactions`, view ปลอดภัย `lounge_feed`, `lounge_post_reactions`, RPC `toggle_lounge_reaction`, `supabase db push` แล้ว
 - 2026-09-25 — เพิ่มระบบติดตามและวิเคราะห์สถิติการใช้งานเมนู (Menu Usage Tracking & Lifecycle Evaluation) ที่ `/admin/menu-usage`: บันทึก event การคลิกเมนู (`menu_click_events`) แบบ non-blocking beacon, แยกสถิตินักเรียน vs staff, แสดงสัดส่วนการคลิก (Click share), จำนวนผู้เรียนจริง (Unique students), ประเมินสถานะความนิยม/เสี่ยงถูกถอน, และตาราง Feature Conversion เทียบการกดเข้าเมนูกับกิจกรรมจริงในระบบ — `supabase db push` แล้ว
 - 2026-09-26 — ปรับปรุง `get_course_progress_pace()` กรองผู้เรียนที่ค้าง/หยุดเรียนเกิน 14 วันออกจากตัวหาร เพื่อไม่ให้ถ่วงเป้า 60% การปล่อยคลิปใหม่ โดยยังคงนับผู้เรียนที่ดูจบครบ 100% ไว้ในตัวหารเสมอ (ไม่ตัดออกแม้ไม่ได้เข้ามาใน 14 วัน) — migration `20260926073248_exclude_inactive_course_pace.sql`
-
+- 2026-09-26 — คิวคลิป draft + ปุ่มลงคลิปถัดไปเมื่อถึง 60% (ครึ่งอัตโนมัติ, cooldown 3 วัน) ที่ `/admin/courses/[id]` — ไม่มี migration

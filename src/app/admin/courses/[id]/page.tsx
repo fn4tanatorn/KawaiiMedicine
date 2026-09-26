@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/auth/require-user";
 import { formatBytes, formatDuration } from "@/lib/format";
+import { PACE_TARGET_PCT, coursePaces, releaseState } from "@/lib/pace";
 import { badge, btn, card, input, label } from "@/components/ui";
 import { Flash } from "@/components/flash";
 import { ConfirmButton } from "@/components/confirm-button";
@@ -12,6 +13,7 @@ import {
   deleteCourseFile,
   deleteVideo,
   moveVideo,
+  publishNextVideo,
   updateCourse,
   updateCourseFile,
   updateVideo,
@@ -32,7 +34,7 @@ export default async function AdminCoursePage({
   const { data: course } = await supabase
     .from("courses")
     .select(
-      "id, slug, title, description, is_published, videos(id, title, description, storage_path, external_url, duration_seconds, position, is_published, video_files(file_id)), course_files(id, title, size_bytes, position, is_published)",
+      "id, slug, title, description, is_published, videos(id, title, description, storage_path, external_url, duration_seconds, position, is_published, published_at, video_files(file_id)), course_files(id, title, size_bytes, position, is_published)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -41,6 +43,9 @@ export default async function AdminCoursePage({
   const files = [...course.course_files].sort(
     (a, b) => a.position - b.position,
   );
+  const pace = (await coursePaces(supabase, [id])).get(id);
+  const release = releaseState(videos);
+  const nextVideo = videos.find((v) => v.id === release.next);
   const videoCountByFile = new Map<string, number>();
   for (const v of videos)
     for (const l of v.video_files)
@@ -69,6 +74,40 @@ export default async function AdminCoursePage({
         </div>
       </div>
       <Flash ok={sp.ok} error={sp.error} />
+
+      {nextVideo && (
+        <section className={card}>
+          <h2 className="font-semibold">
+            ลงคลิปถัดไปตามเป้า {PACE_TARGET_PCT}%
+          </h2>
+          <p className="mt-1 text-sm text-ink-2">
+            {pace
+              ? `ค่าเฉลี่ยดูจบตอนนี้ ${pace.pct}% (ผู้เรียน ${pace.active_students} คน)`
+              : "ยังไม่มีผู้เรียนที่เริ่มดูคอร์สนี้"}
+            {" · "}คิว {release.queue.length} คลิป ถัดไปคือ &ldquo;
+            {nextVideo.title}&rdquo;
+          </p>
+          {release.cooldownUntil && (
+            <p className="mt-1 text-sm text-ink-2">
+              เพิ่งลงคลิปไป รอถึง{" "}
+              {release.cooldownUntil.toLocaleDateString("th-TH", {
+                day: "numeric",
+                month: "short",
+                timeZone: "Asia/Bangkok",
+              })}
+            </p>
+          )}
+          <form action={publishNextVideo} className="mt-3">
+            <input type="hidden" name="course_id" value={course.id} />
+            <button
+              className={btn.primary}
+              disabled={!pace?.ready || !!release.cooldownUntil}
+            >
+              {pace?.ready ? "ลงคลิปถัดไป" : `รอถึง ${PACE_TARGET_PCT}% ก่อน`}
+            </button>
+          </form>
+        </section>
+      )}
 
       <div className="grid gap-8 lg:grid-cols-[1fr_22rem]">
         <div className="space-y-8">
@@ -152,7 +191,11 @@ export default async function AdminCoursePage({
                               v.is_published ? badge.green : badge.gray
                             }
                           >
-                            {v.is_published ? "เผยแพร่" : "ฉบับร่าง"}
+                            {v.is_published
+                              ? "เผยแพร่"
+                              : release.next === v.id
+                                ? "ฉบับร่าง · คิวถัดไป"
+                                : `ฉบับร่าง · คิวที่ ${release.queue.indexOf(v.id) + 1}`}
                           </span>
                           <span className="text-xs text-ink-2">
                             {v.storage_path ? "ไฟล์อัปโหลด" : "ลิงก์ภายนอก"}
