@@ -5,7 +5,6 @@ import {
   IconBookmark,
   IconChart,
   IconChat,
-  IconClock,
   IconExam,
   IconFlag,
   IconHome,
@@ -41,11 +40,6 @@ const ADMIN_NAV = [
     href: "/admin/results",
     label: "ผลสอบ",
     icon: <IconChart width={16} height={16} />,
-  },
-  {
-    href: "/admin/learning-time",
-    label: "เวลาเรียน",
-    icon: <IconClock width={16} height={16} />,
   },
   {
     href: "/admin/menu-usage",
