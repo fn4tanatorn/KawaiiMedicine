@@ -215,3 +215,138 @@ export async function setIdCardPublished(formData: FormData) {
         : "ok=" + encodeURIComponent(publish ? "เผยแพร่แล้ว" : "ซ่อนแล้ว")),
   );
 }
+
+export async function setOrganSystemPublished(formData: FormData) {
+  const { supabase } = await requireAdmin("/admin/identify");
+  const systemId = Number(formData.get("system_id"));
+  const mode = formData.get("mode")?.toString() ?? "open_exclusive";
+  const back = formData.get("back")?.toString() ?? "";
+
+  if (!systemId || !Number.isInteger(systemId)) {
+    redirect(
+      `/admin/identify?error=${encodeURIComponent("ไม่พบรหัสระบบอวัยวะ")}`,
+    );
+  }
+
+  // 1. Get all labels for this system
+  const { data: taggedLabels, error: tagErr } = await supabase
+    .from("id_card_label_organ_systems")
+    .select("label_id, id_card_labels(card_id)")
+    .eq("organ_system_id", systemId);
+
+  if (tagErr || !taggedLabels) {
+    redirect(
+      `/admin/identify?error=${encodeURIComponent("ดึงข้อมูลระบบอวัยวะไม่สำเร็จ")}`,
+    );
+  }
+
+  const targetLabelIds = new Set(taggedLabels.map((t) => t.label_id));
+  const targetCardIds = new Set(
+    taggedLabels
+      .map((t) => {
+        const l = t.id_card_labels;
+        return Array.isArray(l) ? l[0]?.card_id : l?.card_id;
+      })
+      .filter(Boolean) as string[],
+  );
+
+  // 2. Open cards & labels
+  if (mode === "open_exclusive" || mode === "open_all") {
+    if (targetCardIds.size > 0) {
+      const cardArr = [...targetCardIds];
+      for (let i = 0; i < cardArr.length; i += 100) {
+        await supabase
+          .from("id_cards")
+          .update({ is_published: true })
+          .in("id", cardArr.slice(i, i + 100));
+      }
+    }
+    if (targetLabelIds.size > 0) {
+      const labelArr = [...targetLabelIds];
+      for (let i = 0; i < labelArr.length; i += 100) {
+        await supabase
+          .from("id_card_labels")
+          .update({ is_published: true })
+          .in("id", labelArr.slice(i, i + 100));
+      }
+    }
+  }
+
+  // 3. If close_all (close this system)
+  if (mode === "close_all") {
+    if (targetCardIds.size > 0) {
+      const cardArr = [...targetCardIds];
+      for (let i = 0; i < cardArr.length; i += 100) {
+        await supabase
+          .from("id_cards")
+          .update({ is_published: false })
+          .in("id", cardArr.slice(i, i + 100));
+      }
+    }
+    if (targetLabelIds.size > 0) {
+      const labelArr = [...targetLabelIds];
+      for (let i = 0; i < labelArr.length; i += 100) {
+        await supabase
+          .from("id_card_labels")
+          .update({ is_published: false })
+          .in("id", labelArr.slice(i, i + 100));
+      }
+    }
+  }
+
+  // 4. If open_exclusive, close all cards and labels not in this system
+  if (mode === "open_exclusive") {
+    const { data: allCards } = await supabase.from("id_cards").select("id");
+    const otherCardIds = (allCards ?? [])
+      .map((c) => c.id)
+      .filter((id) => !targetCardIds.has(id));
+
+    if (otherCardIds.length > 0) {
+      for (let i = 0; i < otherCardIds.length; i += 100) {
+        await supabase
+          .from("id_cards")
+          .update({ is_published: false })
+          .in("id", otherCardIds.slice(i, i + 100));
+      }
+    }
+
+    let from = 0;
+    while (true) {
+      const { data: batch } = await supabase
+        .from("id_card_labels")
+        .select("id")
+        .eq("is_published", true)
+        .range(from, from + 999);
+      if (!batch || batch.length === 0) break;
+      const toClose = batch
+        .map((l) => l.id)
+        .filter((id) => !targetLabelIds.has(id));
+      if (toClose.length > 0) {
+        for (let i = 0; i < toClose.length; i += 100) {
+          await supabase
+            .from("id_card_labels")
+            .update({ is_published: false })
+            .in("id", toClose.slice(i, i + 100));
+        }
+      }
+      if (batch.length < 1000) break;
+      from += 1000;
+    }
+  }
+
+  revalidatePath("/admin/identify");
+  revalidatePath("/identify");
+
+  const msg =
+    mode === "open_exclusive"
+      ? `เปิดระบบนี้เรียบร้อย (${targetCardIds.size} การ์ด, ${targetLabelIds.size} ข้อ) และปิดระบบอื่นแล้ว`
+      : mode === "open_all"
+        ? `เปิดทุกข้อในระบบนี้เรียบร้อย (${targetCardIds.size} การ์ด, ${targetLabelIds.size} ข้อ)`
+        : `ปิดทุกข้อในระบบนี้เรียบร้อย (${targetCardIds.size} การ์ด, ${targetLabelIds.size} ข้อ)`;
+
+  const qs = new URLSearchParams(back);
+  qs.delete("ok");
+  qs.delete("error");
+  qs.set("ok", msg);
+  redirect(`/admin/identify?${qs.toString()}`);
+}
