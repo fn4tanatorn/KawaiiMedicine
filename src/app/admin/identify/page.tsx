@@ -11,6 +11,7 @@ import {
   deleteIdLabel,
   saveCardLabels,
   setIdCardPublished,
+  setOrganSystemPublished,
 } from "./actions";
 import { CardForm } from "./card-form";
 import { OrganSystemPicker } from "@/components/organ-system-picker";
@@ -117,6 +118,47 @@ export default async function IdentifyAdminPage({
               </>
             )}
           </form>
+
+          {tag && tag !== "none" && (
+            <div className="flex flex-wrap items-center gap-2 rounded-card border border-line bg-surface p-3 text-sm">
+              <span className="font-medium text-ink">
+                ระบบ {systemName.get(Number(tag))}:
+              </span>
+              <form action={setOrganSystemPublished} className="inline-flex gap-2">
+                <input type="hidden" name="system_id" value={tag} />
+                <input type="hidden" name="back" value={back} />
+                <input type="hidden" name="mode" value="open_exclusive" />
+                <ConfirmButton
+                  className={btn.primary}
+                  message={`เปิดทุกข้อในระบบ ${systemName.get(Number(tag))} และปิดระบบอื่นทั้งหมด?`}
+                >
+                  เปิดเฉพาะระบบนี้ (ปิดระบบอื่น)
+                </ConfirmButton>
+              </form>
+              <form action={setOrganSystemPublished} className="inline-flex gap-2">
+                <input type="hidden" name="system_id" value={tag} />
+                <input type="hidden" name="back" value={back} />
+                <input type="hidden" name="mode" value="open_all" />
+                <ConfirmButton
+                  className={btn.secondary}
+                  message={`เปิดทุกข้อในการ์ดของระบบ ${systemName.get(Number(tag))}?`}
+                >
+                  เปิดทุกข้อในระบบนี้
+                </ConfirmButton>
+              </form>
+              <form action={setOrganSystemPublished} className="inline-flex gap-2">
+                <input type="hidden" name="system_id" value={tag} />
+                <input type="hidden" name="back" value={back} />
+                <input type="hidden" name="mode" value="close_all" />
+                <ConfirmButton
+                  className={btn.secondary}
+                  message={`ปิดซ่อนทุกข้อในการ์ดของระบบ ${systemName.get(Number(tag))}?`}
+                >
+                  ปิดทุกข้อในระบบนี้
+                </ConfirmButton>
+              </form>
+            </div>
+          )}
           {!shown.length ? (
             <EmptyState
               title={filtering ? "ไม่มีข้อที่ตรงตัวกรอง" : "ยังไม่มีการ์ด"}
