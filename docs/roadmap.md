@@ -88,6 +88,7 @@
   และหน้าวิเคราะห์ `/admin/menu-usage` เพื่อประเมินสัดส่วนการคลิก (Click share), จำนวนผู้ใช้งานจริง (Unique students),
   และ Feature Conversion เพื่อวางแผนปรับปรุงหรือถอนเมนูในอนาคต — RPC `get_menu_usage_stats()`
 - [x] **Public Interactive Demo สำหรับบุคคลภายนอก (`/demo`)** — Zero-login sandbox ให้บุคคลภายนอกทดลองเรียนก่อนกรอก Google Form: จำลอง 3 ระบบหลัก (Identify Netter typing พร้อม character-level diff, Exam MCQ พร้อมเฉลยละเอียดภาษาไทย, Video & PDF handout preview, และบรรยากาศ Lounge/Milestone 60%) พร้อมปุ่ม CTA ส่งตรงไปยัง Google Forms รับสมัคร
+- [x] **คลังแหล่งเรียนรู้ภายนอกบน Dashboard (Centralized Learning Resources Hub)** — รวมลิงก์ประกอบการเรียนรู้ (Google Drive สไลด์ความละเอียดสูง, เว็บส่องกล้องเสมือน Histology Guide, Radiopaedia, แนวทางเวชปฏิบัติ CPG ฯลฯ) แสดงบนหน้า Dashboard บทเรียน (`/learn`) โดยไม่ผูกติดกับคอร์สใดคอร์สหนึ่ง เพื่อความยืดหยุ่นและการเข้าถึงที่รวดเร็ว. แอดมินจัดการได้ที่ `/admin/learning-links` (เพิ่ม URL, เลือกไอคอน, หมวดหมู่, สลับลำดับ, ซ่อน/เปิดเผยแพร่). ตาราง `learning_resources` พร้อม RLS แยกสิทธิ์ (นักเรียนเห็นเฉพาะที่เผยแพร่, staff จัดการได้ทั้งหมด)
 
 
 ## Phase 7 — Medium effort, impact สูงสุดจาก survey
@@ -143,4 +144,5 @@
 - 2026-09-26 — ปรับปรุง `get_course_progress_pace()` กรองผู้เรียนที่ค้าง/หยุดเรียนเกิน 14 วันออกจากตัวหาร เพื่อไม่ให้ถ่วงเป้า 60% การปล่อยคลิปใหม่ โดยยังคงนับผู้เรียนที่ดูจบครบ 100% ไว้ในตัวหารเสมอ (ไม่ตัดออกแม้ไม่ได้เข้ามาใน 14 วัน) — migration `20260926073248_exclude_inactive_course_pace.sql`
 - 2026-10-01 — ซ่อนแท็บ "เวลาเรียน" (`/admin/learning-time`) ออกจากแถบเมนูหลักของ Admin เพื่อลดความแออัดของ Navbar (หน้าเว็บยังคงเข้าผ่าน URL ได้ปกติ และระบบยังคงบันทึกสถิติการดูตามปกติ)
 - 2026-10-01 — เปิดใช้งานคำถามระบบทางเดินอาหาร (Gastrointestinal: 36 การ์ด 225 ข้อ) ใน Identify Flashcards ครบ 100% พร้อมปิดซ่อนระบบอื่นทั้งหมด (190 การ์ด 1,113 ข้อ) สำหรับการเรียนการสอนเฉพาะระบบ, เพิ่มสคริปต์ batch CLI publisher (`scripts/publish_organ_system.ts`) ที่รองรับ PostgREST pagination (>1,000 แถว), และเพิ่มปุ่มคำสั่ง batch action (เปิดเฉพาะระบบนี้/เปิดทุกข้อ/ปิดทุกข้อ) ในหน้า `/admin/identify`
+- 2026-10-01 — เพิ่มคลังแหล่งเรียนรู้ภายนอกบน Dashboard (`/learn`) และหน้าจัดการลิงก์สำหรับแอดมิน (`/admin/learning-links`): ตาราง `learning_resources`, RLS, Server Actions, และการแสดงผลการ์ดลิงก์ภายนอกพร้อมไอคอนหมวดหมู่ (`20261001183500_learning_resources.sql`)
 
