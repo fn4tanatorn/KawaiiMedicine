@@ -61,6 +61,7 @@ supabase migration new <name>
 - `id_cards` → `id_card_labels` (answer keys, staff-only) ; `id_pending` ; `id_answers` (quota/history log)
 - `lounge_posts` → `lounge_reactions` ; secure views `lounge_feed`, `lounge_post_reactions` (masking `user_id` for 100% student anonymity)
 - `menu_click_events` (non-blocking client telemetry via `trackMenuClick` / `navigator.sendBeacon`)
+- `learning_resources` (external learning links & reference hub on `/learn` dashboard, managed by staff at `/admin/learning-links`)
 - Helpers & RPCs: `is_staff()`, `current_user_role()`, `submit_exam_attempt()`, `next_id_question()`, `answer_id_label()`, `id_quota()`, `toggle_lounge_reaction()`, `get_course_progress_pace()`, `get_user_last_active()`, `get_menu_usage_stats()`
 
 ### Security rules that must hold

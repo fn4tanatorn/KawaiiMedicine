@@ -2,6 +2,7 @@ import { requireStaff } from "@/lib/auth/require-user";
 import { AppHeader } from "@/components/app-header";
 import { NavLinks } from "@/components/nav-links";
 import {
+  IconBookmark,
   IconChart,
   IconChat,
   IconClock,
@@ -25,6 +26,11 @@ const ADMIN_NAV = [
     href: "/admin/courses",
     label: "คอร์ส & วิดีโอ",
     icon: <IconPlay width={16} height={16} />,
+  },
+  {
+    href: "/admin/learning-links",
+    label: "ลิงก์เรียนรู้",
+    icon: <IconBookmark width={16} height={16} />,
   },
   {
     href: "/admin/exams",

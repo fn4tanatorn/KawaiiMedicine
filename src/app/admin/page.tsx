@@ -19,6 +19,7 @@ export default async function AdminHome() {
     courseFeedback,
     openReports,
     menuClicks,
+    learningResources,
     recent,
   ] = await Promise.all([
     supabase.from("courses").select("id", { count: "exact", head: true }),
@@ -41,6 +42,9 @@ export default async function AdminHome() {
       .from("menu_click_events")
       .select("id", { count: "exact", head: true }),
     supabase
+      .from("learning_resources")
+      .select("id", { count: "exact", head: true }),
+    supabase
       .from("exam_attempts")
       .select(
         "id, score, passed, submitted_at, exams(slug, title), profiles(full_name, email, line_name)",
@@ -53,6 +57,11 @@ export default async function AdminHome() {
   const stats = [
     { label: "คอร์ส", value: courses.count ?? 0, href: "/admin/courses" },
     { label: "วิดีโอ", value: videos.count ?? 0, href: "/admin/courses" },
+    {
+      label: "ลิงก์เรียนรู้",
+      value: learningResources.count ?? 0,
+      href: "/admin/learning-links",
+    },
     { label: "ข้อสอบ", value: exams.count ?? 0, href: "/admin/exams" },
     {
       label: "ครั้งที่ส่งสอบ",
