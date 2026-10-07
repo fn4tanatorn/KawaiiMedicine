@@ -54,6 +54,17 @@ interface CardData {
   comment: string;
 }
 
+export function isNonSpecificLabel(answer: string): boolean {
+  const ans = answer.toLowerCase().trim();
+  if (ans.includes("nucleus") || ans.includes("nuclei") || ans.includes("nucleol")) return true;
+  if (ans.includes("mitochondri")) return true;
+  if (ans.includes("endoplasmic reticulum")) return true;
+  if (ans.includes("golgi")) return true;
+  if (ans.includes("plasma membrane")) return true;
+  if (ans === "absorption") return true;
+  return false;
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const isDryRun = args.includes("--dry-run");
@@ -224,15 +235,25 @@ async function main() {
       continue;
     }
 
-    // 4. Insert into id_card_label_organ_systems
-    const tagInserts = newLabels.map((l) => ({
-      label_id: l.id,
-      organ_system_id: finalSysId,
-    }));
+    // 4. Insert into id_card_label_organ_systems (excluding non-specific cellular organelle labels)
+    const tagInserts = newLabels
+      .map((l, lIdx) => {
+        const labelObj = card.labels[lIdx];
+        const isNonSpecific = isNonSpecificLabel(labelObj?.answer ?? "");
+        return isNonSpecific
+          ? null
+          : {
+              label_id: l.id,
+              organ_system_id: finalSysId,
+            };
+      })
+      .filter(
+        (t): t is { label_id: string; organ_system_id: number } => t !== null,
+      );
 
-    const { error: tagErr } = await supabase
-      .from("id_card_label_organ_systems")
-      .insert(tagInserts);
+    const { error: tagErr } = tagInserts.length > 0
+      ? await supabase.from("id_card_label_organ_systems").insert(tagInserts)
+      : { error: null };
 
     if (tagErr) {
       console.warn(

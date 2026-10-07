@@ -46,3 +46,6 @@ next-env.d.ts
 
 # identify images (extracted locally from Netter PDF, uploaded to Supabase storage)
 data/identify/images/
+
+# temporary scratch artifacts
+scratch/
