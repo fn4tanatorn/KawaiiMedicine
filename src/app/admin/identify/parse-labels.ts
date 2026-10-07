@@ -12,17 +12,27 @@ export function parseLabelLines(text: string) {
     const m = line.match(/^\s*(\d+)\s*[.)\-:]?\s*(.+?)\s*$/);
     if (!m) continue;
     const no = Number(m[1]);
-    const [answer, ...alts] = m[2]
+    const [rawAnswer, ...alts] = m[2]
       .split("|")
       .map((s) => s.trim())
       .filter(Boolean);
-    if (!answer || no <= 0 || seen.has(no)) continue;
+    if (!rawAnswer || no <= 0 || seen.has(no)) continue;
     seen.add(no);
-    const stripped = answer.replace(/\s*\([^)]*\)\s*$/, "").trim();
-    const synonyms = [...new Set([...alts, stripped])].filter(
-      (s) => s && s.toLowerCase() !== answer.toLowerCase(),
+    const withoutParens = rawAnswer
+      .replace(/\s*\([^)]*\)/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    const withInside = rawAnswer
+      .replace(/\(([^)]+)\)/g, "$1")
+      .replace(/\s+/g, " ")
+      .trim();
+    const primary = withoutParens || rawAnswer;
+
+    const candidateSyns = [...alts, rawAnswer, withInside];
+    const synonyms = [...new Set(candidateSyns)].filter(
+      (s) => s && s.toLowerCase() !== primary.toLowerCase(),
     );
-    out.push({ label_no: no, answer, synonyms });
+    out.push({ label_no: no, answer: primary, synonyms });
   }
   return out.sort((a, b) => a.label_no - b.label_no);
 }

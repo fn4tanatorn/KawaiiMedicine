@@ -61,12 +61,12 @@ supabase migration new <name>
 - `lounge_posts` → `lounge_reactions` ; secure views `lounge_feed`, `lounge_post_reactions` (masking `user_id` for 100% student anonymity)
 - `menu_click_events` (non-blocking client telemetry via `trackMenuClick` / `navigator.sendBeacon`)
 - `learning_resources` (external learning links & reference hub on `/learn` dashboard, managed by staff at `/admin/learning-links`)
-- Helpers & RPCs: `is_staff()`, `current_user_role()`, `submit_exam_attempt()`, `next_id_question()`, `answer_id_label()`, `id_quota()`, `toggle_lounge_reaction()`, `get_course_progress_pace()`, `get_user_last_active()`, `get_menu_usage_stats()`
+- Helpers & RPCs: `is_staff()`, `current_user_role()`, `submit_exam_attempt()`, `next_id_question()`, `answer_id_label()`, `id_quota()`, `toggle_lounge_reaction()`, `get_course_progress_pace()`, `get_user_last_active()`, `get_menu_usage_stats()`, `normalize_answer()`
 
 ### Security rules that must hold
 
 - `choices.is_correct` is never readable by students. Students read choices via the `exam_choices` view. Do not add a student SELECT policy on `choices`.
-- `id_card_labels` (Identify answer keys) is staff-only too. Students never choose a question: `next_id_question()` picks one (60% wrong-never-right / 20% wrong-then-right / 20% new) and stores it in `id_pending`; `answer_id_label(text)` grades only that pending question, enforces the daily quota (5/day, 10/day after completing every published video) and is the only writer of `id_answers`.
+- `id_card_labels` (Identify answer keys) is staff-only too. Students never choose a question: `next_id_question()` picks one (60% wrong-never-right / 20% wrong-then-right / 20% new) and stores it in `id_pending`; `answer_id_label(text)` grades only that pending question, enforces the daily quota (5/day, 10/day after completing every published video) and is the only writer of `id_answers`. Answers are normalized via `normalize_answer()` (punctuation/hyphen/case resilient) and evaluated against clean canonical keys and medical synonyms.
 - `lounge_posts` & `lounge_reactions` student anonymity: students must NEVER query raw `lounge_posts.user_id` or `lounge_reactions.user_id`. Client feeds query strictly through security-definer views `lounge_feed` and `lounge_post_reactions` which omit `user_id` and expose only masked aliases and avatars.
 - Grading is done only by the `submit_exam_attempt(uuid)` RPC. Students have no UPDATE policy on `exam_attempts`.
 - Every new table gets RLS enabled and explicit policies in the same migration.
