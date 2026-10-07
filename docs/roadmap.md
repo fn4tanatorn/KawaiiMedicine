@@ -87,7 +87,7 @@
   (`menu_click_events`) แบบ non-blocking fire-and-forget ผ่าน `trackMenuClick()` / `navigator.sendBeacon`
   และหน้าวิเคราะห์ `/admin/menu-usage` เพื่อประเมินสัดส่วนการคลิก (Click share), จำนวนผู้ใช้งานจริง (Unique students),
   และ Feature Conversion เพื่อวางแผนปรับปรุงหรือถอนเมนูในอนาคต — RPC `get_menu_usage_stats()`
-- [x] **Public Interactive Demo สำหรับบุคคลภายนอก (`/demo`)** — Zero-login sandbox ให้บุคคลภายนอกทดลองเรียนก่อนกรอก Google Form: จำลอง 3 ระบบหลัก (Identify Netter typing พร้อม character-level diff, Exam MCQ พร้อมเฉลยละเอียดภาษาไทย, Video & PDF handout preview, และบรรยากาศ Lounge/Milestone 60%) พร้อมปุ่ม CTA ส่งตรงไปยัง Google Forms รับสมัคร
+- [x] ~~**Public Interactive Demo สำหรับบุคคลภายนอก (`/demo`)**~~ *(นำออกจากระบบ/ยกเลิกฟีเจอร์)* — Zero-login sandbox ให้บุคคลภายนอกทดลองเรียนก่อนกรอก Google Form: จำลอง 3 ระบบหลัก (Identify Netter typing พร้อม character-level diff, Exam MCQ พร้อมเฉลยละเอียดภาษาไทย, Video & PDF handout preview, และบรรยากาศ Lounge/Milestone 60%) พร้อมปุ่ม CTA ส่งตรงไปยัง Google Forms รับสมัคร
 - [x] **คลังแหล่งเรียนรู้ภายนอกบน Dashboard (Centralized Learning Resources Hub)** — รวมลิงก์ประกอบการเรียนรู้ (Google Drive สไลด์ความละเอียดสูง, เว็บส่องกล้องเสมือน Histology Guide, Radiopaedia, แนวทางเวชปฏิบัติ CPG ฯลฯ) แสดงบนหน้า Dashboard บทเรียน (`/learn`) โดยไม่ผูกติดกับคอร์สใดคอร์สหนึ่ง เพื่อความยืดหยุ่นและการเข้าถึงที่รวดเร็ว. แอดมินจัดการได้ที่ `/admin/learning-links` (เพิ่ม URL, เลือกไอคอน, หมวดหมู่, สลับลำดับ, ซ่อน/เปิดเผยแพร่). ตาราง `learning_resources` พร้อม RLS แยกสิทธิ์ (นักเรียนเห็นเฉพาะที่เผยแพร่, staff จัดการได้ทั้งหมด)
 
 

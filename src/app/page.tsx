@@ -27,11 +27,7 @@ export default async function Home() {
         </p>
       </div>
       <div className="flex flex-wrap justify-center gap-3">
-        <Link href="/demo" className={`${btn.primary} gap-2`}>
-          <span>✨</span>
-          <span>ทดลองเรียนฟรี (Demo)</span>
-        </Link>
-        <Link href="/learn" className={btn.secondary}>
+        <Link href="/learn" className={btn.primary}>
           บทเรียนวิดีโอ
         </Link>
         <Link href="/exam" className={btn.secondary}>
@@ -39,11 +35,9 @@ export default async function Home() {
         </Link>
       </div>
       {!user && (
-        <div className="flex flex-col items-center gap-1.5 text-xs text-ink-2">
-          <Link href="/login" className={btn.link}>
-            มีบัญชีแล้ว? เข้าสู่ระบบ
-          </Link>
-        </div>
+        <Link href="/login" className={btn.link}>
+          เข้าสู่ระบบ
+        </Link>
       )}
     </main>
   );
