@@ -83,7 +83,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
         lineName={lineName}
       />
       <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6">
-        <div className="mb-6 overflow-x-auto rounded-pill border border-line bg-surface/70 p-1 shadow-soft">
+        <div className="mb-6 overflow-x-auto no-scrollbar rounded-pill border border-line bg-surface/70 p-1 shadow-soft">
           <NavLinks
             items={
               role === "admin" ? [...ADMIN_NAV, ...ADMIN_ONLY_NAV] : ADMIN_NAV
