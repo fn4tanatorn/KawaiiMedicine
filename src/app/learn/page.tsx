@@ -209,20 +209,14 @@ export default async function LearnPage({ searchParams }: PageProps<"/learn">) {
       {(resources.length > 0 || isStaff) && (
         <section id="resources" className="mt-12 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line pb-3">
-            <div>
-              <h2 className="flex items-center gap-2 text-lg font-semibold">
-                <span>แหล่งเรียนรู้แนะนำ</span>
-                {resources.length > 0 && (
-                  <span className="rounded-full bg-surface-2 px-2 py-0.5 text-xs font-normal text-ink-2">
-                    {resources.length} แหล่งข้อมูล
-                  </span>
-                )}
-              </h2>
-              <p className="mt-0.5 text-xs text-ink-2">
-                คลังสไลด์, แหล่งส่องกล้องเสมือน, เคสรังสีวิทยา
-                และเอกสารประกอบการศึกษา
-              </p>
-            </div>
+            <h2 className="flex items-center gap-2 text-lg font-semibold">
+              <span>แหล่งเรียนรู้แนะนำ</span>
+              {resources.length > 0 && (
+                <span className="rounded-full bg-surface-2 px-2 py-0.5 text-xs font-normal text-ink-2">
+                  {resources.length} แหล่งข้อมูล
+                </span>
+              )}
+            </h2>
             {isStaff && (
               <Link
                 href="/admin/learning-links"
