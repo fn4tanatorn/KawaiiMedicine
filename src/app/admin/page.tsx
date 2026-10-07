@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth/require-user";
-import { formatDateTime, formatScore } from "@/lib/format";
-import { badge, card } from "@/components/ui";
+import { card } from "@/components/ui";
 
 export const metadata: Metadata = { title: "จัดการระบบ" };
 
@@ -20,7 +19,6 @@ export default async function AdminHome() {
     openReports,
     menuClicks,
     learningResources,
-    recent,
   ] = await Promise.all([
     supabase.from("courses").select("id", { count: "exact", head: true }),
     supabase.from("videos").select("id", { count: "exact", head: true }),
@@ -44,14 +42,6 @@ export default async function AdminHome() {
     supabase
       .from("learning_resources")
       .select("id", { count: "exact", head: true }),
-    supabase
-      .from("exam_attempts")
-      .select(
-        "id, score, passed, submitted_at, exams(slug, title), profiles(full_name, email, line_name)",
-      )
-      .not("submitted_at", "is", null)
-      .order("submitted_at", { ascending: false })
-      .limit(8),
   ]);
 
   const stats = [
@@ -108,58 +98,6 @@ export default async function AdminHome() {
           </li>
         ))}
       </ul>
-
-      <section>
-        <div className="flex items-center justify-between">
-          <h2 className="font-semibold">ผลสอบล่าสุด</h2>
-          <Link
-            href="/admin/results"
-            className="text-sm text-ink-2 hover:underline"
-          >
-            ดูทั้งหมด
-          </Link>
-        </div>
-        {!recent.data?.length ? (
-          <p className="mt-3 text-sm text-ink-2">ยังไม่มีการส่งข้อสอบ</p>
-        ) : (
-          <ul className="mt-3 divide-y divide-line rounded-xl border border-line text-sm">
-            {recent.data.map((a) => (
-              <li key={a.id}>
-                <Link
-                  href={`/exam/${a.exams?.slug}/attempt/${a.id}`}
-                  className="flex items-center gap-4 px-5 py-3 hover:bg-surface-2"
-                >
-                  <span className="flex-1 truncate">
-                    <span className="font-medium">
-                      {a.profiles?.full_name ||
-                        a.profiles?.email ||
-                        "ไม่ทราบชื่อ"}
-                    </span>
-                    {a.profiles?.line_name && (
-                      <span className="text-ink-2">
-                        {" "}
-                        (LINE: {a.profiles.line_name})
-                      </span>
-                    )}
-                    <span className="text-ink-2"> · {a.exams?.title}</span>
-                  </span>
-                  <span className="text-ink-2">
-                    {formatDateTime(a.submitted_at)}
-                  </span>
-                  <span className="w-14 text-right font-medium">
-                    {formatScore(a.score)}
-                  </span>
-                  {a.passed != null && (
-                    <span className={a.passed ? badge.green : badge.red}>
-                      {a.passed ? "ผ่าน" : "ไม่ผ่าน"}
-                    </span>
-                  )}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
     </main>
   );
 }
