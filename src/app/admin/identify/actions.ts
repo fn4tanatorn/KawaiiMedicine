@@ -350,3 +350,60 @@ export async function setOrganSystemPublished(formData: FormData) {
   qs.set("ok", msg);
   redirect(`/admin/identify?${qs.toString()}`);
 }
+
+export async function closeAllIdCards(formData: FormData) {
+  const { supabase } = await requireAdmin("/admin/identify");
+  const back = formData.get("back")?.toString() ?? "";
+
+  // 1. Close all open cards
+  const { data: openCards } = await supabase
+    .from("id_cards")
+    .select("id")
+    .eq("is_published", true);
+
+  const cardIds = (openCards ?? []).map((c) => c.id);
+  if (cardIds.length > 0) {
+    for (let i = 0; i < cardIds.length; i += 100) {
+      await supabase
+        .from("id_cards")
+        .update({ is_published: false })
+        .in("id", cardIds.slice(i, i + 100));
+    }
+  }
+
+  // 2. Close all open labels
+  let from = 0;
+  let closedLabelsCount = 0;
+  while (true) {
+    const { data: batch } = await supabase
+      .from("id_card_labels")
+      .select("id")
+      .eq("is_published", true)
+      .range(from, from + 999);
+    if (!batch || batch.length === 0) break;
+    const ids = batch.map((l) => l.id);
+    for (let i = 0; i < ids.length; i += 100) {
+      const chunk = ids.slice(i, i + 100);
+      await supabase
+        .from("id_card_labels")
+        .update({ is_published: false })
+        .in("id", chunk);
+      closedLabelsCount += chunk.length;
+    }
+    if (batch.length < 1000) break;
+    from += 1000;
+  }
+
+  revalidatePath("/admin/identify");
+  revalidatePath("/identify");
+
+  const qs = new URLSearchParams(back);
+  qs.delete("ok");
+  qs.delete("error");
+  qs.set(
+    "ok",
+    `ปิดการ์ดทั้งหมดแล้ว (${cardIds.length} การ์ด, ${closedLabelsCount} ข้อ)`,
+  );
+  redirect(`/admin/identify?${qs.toString()}`);
+}
+

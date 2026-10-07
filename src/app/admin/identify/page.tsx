@@ -7,6 +7,7 @@ import { Flash } from "@/components/flash";
 import { EmptyState } from "@/components/empty-state";
 import { ConfirmButton } from "@/components/confirm-button";
 import {
+  closeAllIdCards,
   deleteIdCard,
   deleteIdLabel,
   saveCardLabels,
@@ -63,6 +64,11 @@ export default async function IdentifyAdminPage({
     }))
     .filter((c) => !filtering || c.labels.length);
   const matched = shown.reduce((n, c) => n + c.labels.length, 0);
+  const openCardsCount = (cards ?? []).filter((c) => c.is_published).length;
+  const openLabelsCount = (cards ?? []).reduce(
+    (n, c) => n + c.id_card_labels.filter((l) => l.is_published).length,
+    0,
+  );
   const urls = await signQuestionImages(
     supabase,
     shown.map((c) => c.image_path),
@@ -81,6 +87,33 @@ export default async function IdentifyAdminPage({
 
       <div className="grid gap-8 lg:grid-cols-[1fr_22rem]">
         <section className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-line bg-surface p-3 text-sm">
+            {openCardsCount > 0 ? (
+              <>
+                <span className="text-ink">
+                  สถานะภาพรวม: กำลังเปิดให้นักศึกษาทำ{" "}
+                  <strong className="font-semibold text-emerald-600">
+                    {openCardsCount} การ์ด
+                  </strong>{" "}
+                  ({openLabelsCount} ข้อ)
+                </span>
+                <form action={closeAllIdCards} className="inline-flex">
+                  <input type="hidden" name="back" value={back} />
+                  <ConfirmButton
+                    className={btn.danger}
+                    message={`ต้องการปิดซ่อนการ์ดทั้งหมด (${openCardsCount} การ์ด, ${openLabelsCount} ข้อ) หรือไม่? นักศึกษาจะไม่เห็นข้อใดๆ จนกว่าจะเปิดใหม่`}
+                  >
+                    ปิดการ์ดทั้งหมด
+                  </ConfirmButton>
+                </form>
+              </>
+            ) : (
+              <span className="text-ink-2">
+                สถานะภาพรวม: <strong>ปิดการ์ดทั้งหมดอยู่</strong> (0 การ์ดที่เปิดให้นักศึกษาทำ)
+              </span>
+            )}
+          </div>
+
           <form className="flex flex-wrap items-end gap-2">
             <select
               name="tag"
