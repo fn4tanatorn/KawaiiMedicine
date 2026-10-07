@@ -11,6 +11,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "../src/lib/supabase/database.types";
+import { isNonSpecificGiLabel } from "./exclude_nonspecific_gi_labels";
 
 // Load .env.local
 const envLocalPath = path.resolve(process.cwd(), ".env.local");
@@ -128,7 +129,7 @@ async function main() {
   // 2. Query target labels
   const { data: taggedLabels, error: tagErr } = await supabase
     .from("id_card_label_organ_systems")
-    .select("label_id, organ_system_id, id_card_labels(id, card_id)")
+    .select("label_id, organ_system_id, id_card_labels(id, card_id, answer)")
     .eq("organ_system_id", targetSystemId);
 
   if (tagErr || !taggedLabels) {
@@ -136,18 +137,27 @@ async function main() {
     process.exit(1);
   }
 
-  const targetLabelIds = new Set(taggedLabels.map((t) => t.label_id));
+  // Filter out any non-specific labels (e.g. Nucleus, Mitochondria, RER, SER, Golgi, etc.)
+  const specificTaggedLabels = taggedLabels.filter((t) => {
+    const l = t.id_card_labels;
+    const answer = Array.isArray(l) ? l[0]?.answer : l?.answer;
+    return !isNonSpecificGiLabel(answer ?? "");
+  });
+
+  const targetLabelIds = new Set(specificTaggedLabels.map((t) => t.label_id));
   const targetCardIds = new Set(
-    taggedLabels.map((t) => {
-      // Supabase joins can return object or array
-      const l = t.id_card_labels;
-      return Array.isArray(l) ? l[0]?.card_id : l?.card_id;
-    }).filter(Boolean) as string[],
+    specificTaggedLabels
+      .map((t) => {
+        // Supabase joins can return object or array
+        const l = t.id_card_labels;
+        return Array.isArray(l) ? l[0]?.card_id : l?.card_id;
+      })
+      .filter(Boolean) as string[],
   );
 
   console.log(`Found in system "${currentSystem.name_en}":`);
   console.log(`• ${targetCardIds.size} unique cards`);
-  console.log(`• ${targetLabelIds.size} unique labels\n`);
+  console.log(`• ${targetLabelIds.size} unique specific labels\n`);
 
   // 3. Fetch all cards and all labels
   const { data: allCards, error: cardErr } = await supabase
