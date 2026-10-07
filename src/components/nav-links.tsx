@@ -10,6 +10,7 @@ export type NavItem = {
   icon?: React.ReactNode;
   exact?: boolean;
   trackKey?: string;
+  matchPrefix?: string;
 };
 
 /** Pill navigation with the current route highlighted. */
@@ -34,7 +35,9 @@ export function NavLinks({
       }`}
     >
       {items.map((n) => {
-        const active = n.exact
+        const active = n.matchPrefix
+          ? pathname === n.matchPrefix || pathname.startsWith(n.matchPrefix + "/")
+          : n.exact
           ? pathname === n.href
           : pathname === n.href || pathname.startsWith(n.href + "/");
         const key = n.trackKey || n.href.replace(/^\//, "") || "home";

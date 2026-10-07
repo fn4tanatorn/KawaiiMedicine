@@ -7,7 +7,6 @@ import {
   IconChat,
   IconExam,
   IconFlag,
-  IconHome,
   IconPlay,
   IconPointer,
   IconTarget,
@@ -15,12 +14,6 @@ import {
 } from "@/components/icons";
 
 const ADMIN_NAV = [
-  {
-    href: "/admin",
-    label: "ภาพรวม",
-    exact: true,
-    icon: <IconHome width={16} height={16} />,
-  },
   {
     href: "/admin/courses",
     label: "คอร์ส & วิดีโอ",
