@@ -15,7 +15,6 @@ Medical-education web app. Core features:
 - **EXAM** (`/exam`): multiple-choice exams with server-side grading, self-paced open/close windows, and attempt limits.
 - **IDENTIFY** (`/identify`): anatomical flashcard typing runner with weighted spaced repetition (60% wrong-never-right / 20% wrong-then-right / 20% new), fuzzy matching, and daily quotas (5/day standard, 10/day after watching all published videos).
 - **LOUNGE** (`/lounge`): "มุมพักใจ" semi-private anonymous encouragement board with randomized cute animal aliases, 1-click mood picker, and 1-tap reactions (🤍 🫂 ☕ 💪).
-- **DEMO** (`/demo`): zero-login public interactive demo showcasing Identify typing with vector SVG medical figures, clinical MCQ exam with detailed rationales, and video/slide preview before applying via Google Forms.
 - **CLASS ENROLLMENT GATE** (`/join`): closed cohort protection requiring secret class passcode (from LINE OpenChat note) and LINE nickname before granting student privileges (`enrolled: true`).
 - **ADMIN & TELEMETRY** (`/admin`): curriculum & exam authoring, student directory with enrollment status & inactivity flags (`/admin/users`), learning time pace analytics (`/admin/learning-time`), and fire-and-forget menu usage telemetry (`/admin/menu-usage`).
 
