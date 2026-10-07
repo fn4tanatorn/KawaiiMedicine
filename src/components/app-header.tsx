@@ -62,7 +62,9 @@ export async function AppHeader({
     ...(isStaff
       ? [
           {
-            href: "/admin",
+            href: "/admin/courses",
+            matchPrefix: "/admin",
+            trackKey: "admin",
             label: "จัดการ",
             icon: <IconSettings width={17} height={17} />,
           },
