@@ -44,8 +44,13 @@ next-env.d.ts
 # agent worktrees
 .claude/worktrees/
 
-# identify images (extracted locally from Netter PDF, uploaded to Supabase storage)
+# local reference pdfs (do not commit large medical textbooks)
+*.pdf
+
+# identify & question images (extracted locally from Netter PDF, uploaded to Supabase storage)
 data/identify/images/
+data/exam14_images/
 
 # temporary scratch artifacts
 scratch/
+
