@@ -12,6 +12,8 @@ type TopicIconName =
   | "blood-cell"
   | "capsule"
   | "stomach"
+  | "skeletal"
+  | "lymphatic-immune"
   | "study";
 
 /** Title keywords (Thai + English) mapped to a specific icon, checked in order. */
@@ -23,6 +25,8 @@ const KEYWORD_ICONS: [RegExp, TopicIconName][] = [
   [/pharm|drug|medicat|ยา|เภสัช/i, "capsule"],
   [/inject|vaccine|syringe|ฉีด|วัคซีน/i, "syringe"],
   [/gastro|intestin|stomach|digest|gi|ทางเดินอาหาร|กระเพาะ|ลำไส้|ย่อย/i, "stomach"],
+  [/skelet|bone|musculo|โครงกระดูก|กระดูก/i, "skeletal"],
+  [/lymph|immun|น้ำเหลือง|ภูมิคุ้มกัน/i, "lymphatic-immune"],
   [/learn|study|ทบทวน|เทคนิค|เรียน/i, "study"],
   [/lab|micro|histolog|จุลชีพ|จุลกาย|ห้องปฏิบัติการ/i, "microscope"],
 ];
