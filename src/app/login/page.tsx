@@ -5,7 +5,6 @@ import { safeNextPath } from "@/lib/auth/site-url";
 import { alert, btn, card, input } from "@/components/ui";
 import { Logo } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { REGISTRATION_FORM_URL } from "@/lib/constants";
 import { sendMagicLink, signInWithGoogle } from "./actions";
 
 export const metadata: Metadata = { title: "เข้าสู่ระบบ" };
@@ -99,20 +98,6 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
                 ไม่ต้องตั้งรหัสผ่าน — เรากดลิงก์ในอีเมลเพื่อเข้าสู่ระบบ
               </p>
             </form>
-
-            <div className="rounded-2xl border border-line bg-surface/70 p-4 text-center text-xs text-ink-2 space-y-2.5">
-              <p className="font-semibold text-ink">ยังไม่ได้เป็นสมาชิกคลาสเรียน?</p>
-              <div className="flex items-center justify-center">
-                <a
-                  href={REGISTRATION_FORM_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`${btn.secondary} text-xs py-1.5 px-3`}
-                >
-                  สมัครผ่าน Google Forms ➔
-                </a>
-              </div>
-            </div>
           </div>
         )}
       </div>
