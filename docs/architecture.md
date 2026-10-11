@@ -21,9 +21,9 @@ KawaiiMedicine/
 │   ├── app/                     # Next.js 16 App Router (routes, layouts, server actions)
 │   │   ├── (public)/            # Landing & authentication entry points
 │   │   │   ├── page.tsx         # Guest landing page
-│   │   │   └── login/           # Google OAuth & Magic Link authentication
+│   │   │   └── login/           # Google OAuth authentication
 │   │   ├── auth/                # Auth handlers
-│   │   │   ├── callback/        # PKCE code & token hash exchange
+│   │   │   ├── callback/        # PKCE code exchange
 │   │   │   └── signout/         # Session signout endpoint
 │   │   ├── learn/               # Video courses & lesson player
 │   │   │   ├── [slug]/          # Course syllabus & video listing
