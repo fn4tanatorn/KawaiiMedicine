@@ -76,9 +76,9 @@ supabase migration new <name>
 
 ### Auth
 
-- Methods: **Google OAuth** and **Magic Link** only. No passwords. Users use personal email (no domain restriction).
-- `src/app/login/` — page + Server Functions `signInWithGoogle` / `sendMagicLink`.
-- `src/app/auth/callback/route.ts` — handles PKCE `code` (Google, magic link) and `token_hash`+`type`. Always pass `?next=` and sanitize it with `safeNextPath()`.
+- Methods: **Google OAuth** only. No passwords. Users use personal email (no domain restriction).
+- `src/app/login/` — page + Server Function `signInWithGoogle`.
+- `src/app/auth/callback/route.ts` — handles PKCE `code` (Google OAuth). Always pass `?next=` and sanitize it with `safeNextPath()`.
 - `src/app/auth/signout/route.ts` — POST only.
 - `requireUser()` from `src/lib/auth/require-user.ts` in every protected Server Component / Server Function.
 - Redirect URLs must be allow-listed in Supabase → Authentication → URL Configuration: `https://kawaiimedicine.vercel.app/auth/callback`, `http://localhost:3000/auth/callback`, and a wildcard for Vercel previews. Site URL is the Vercel production origin.

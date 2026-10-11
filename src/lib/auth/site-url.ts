@@ -1,8 +1,8 @@
 import { headers } from "next/headers";
 
 /**
- * Absolute origin of the current deployment, used for OAuth / magic-link
- * redirects. Prefers NEXT_PUBLIC_SITE_URL, then the incoming request host.
+ * Absolute origin of the current deployment, used for OAuth redirects.
+ * Prefers NEXT_PUBLIC_SITE_URL, then the incoming request host.
  */
 export async function getSiteUrl(): Promise<string> {
   const fromEnv = process.env.NEXT_PUBLIC_SITE_URL;

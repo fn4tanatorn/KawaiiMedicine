@@ -28,27 +28,3 @@ export async function signInWithGoogle(formData: FormData) {
   redirect(data.url);
 }
 
-export async function sendMagicLink(formData: FormData) {
-  const email = formData.get("email")?.toString().trim().toLowerCase() ?? "";
-  const next = safeNextPath(formData.get("next")?.toString());
-
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    redirect(loginUrl({ error: "email", next }));
-  }
-
-  const supabase = await createClient();
-  const siteUrl = await getSiteUrl();
-
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      emailRedirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent(next)}`,
-      shouldCreateUser: true,
-    },
-  });
-
-  if (error) {
-    redirect(loginUrl({ error: "magic", next }));
-  }
-  redirect(loginUrl({ sent: email, next }));
-}

@@ -2,24 +2,21 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { safeNextPath } from "@/lib/auth/site-url";
-import { alert, btn, card, input } from "@/components/ui";
+import { alert, btn } from "@/components/ui";
 import { Logo } from "@/components/icons";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { sendMagicLink, signInWithGoogle } from "./actions";
+import { signInWithGoogle } from "./actions";
 
 export const metadata: Metadata = { title: "เข้าสู่ระบบ" };
 
 const ERRORS: Record<string, string> = {
   google: "เข้าสู่ระบบด้วย Google ไม่สำเร็จ กรุณาลองใหม่",
-  email: "กรุณากรอกอีเมลให้ถูกต้อง",
-  magic: "ส่งลิงก์ไม่สำเร็จ กรุณาลองใหม่ในอีกสักครู่",
-  callback: "ลิงก์ไม่ถูกต้องหรือหมดอายุ กรุณาขอลิงก์ใหม่",
+  callback: "เกิดข้อผิดพลาดในการเข้าสู่ระบบ กรุณาลองใหม่",
 };
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const sp = await searchParams;
   const next = safeNextPath(typeof sp.next === "string" ? sp.next : undefined);
-  const sent = typeof sp.sent === "string" ? sp.sent : null;
   const error = typeof sp.error === "string" ? ERRORS[sp.error] : null;
 
   const supabase = await createClient();
@@ -48,58 +45,15 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           </p>
         )}
 
-        {sent ? (
-          <div className={`${card} space-y-3 text-center`}>
-            <p className="font-medium">ส่งลิงก์เข้าสู่ระบบแล้ว</p>
-            <p className="text-sm text-ink-2">
-              ตรวจสอบกล่องจดหมายของ <span className="font-medium">{sent}</span>{" "}
-              แล้วกดลิงก์ในอีเมลเพื่อเข้าสู่ระบบ (ลิงก์มีอายุจำกัด)
-            </p>
-            <a
-              href={`/login?next=${encodeURIComponent(next)}`}
-              className={btn.link}
-            >
-              ใช้อีเมลอื่น
-            </a>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            <form action={signInWithGoogle}>
-              <input type="hidden" name="next" value={next} />
-              <button type="submit" className={`${btn.secondary} w-full gap-3`}>
-                <GoogleIcon />
-                เข้าสู่ระบบด้วย Google
-              </button>
-            </form>
-
-            <div className="flex items-center gap-3 text-xs text-muted">
-              <span className="h-px flex-1 bg-line" />
-              หรือ
-              <span className="h-px flex-1 bg-line" />
-            </div>
-
-            <form action={sendMagicLink} className="space-y-3">
-              <input type="hidden" name="next" value={next} />
-              <label className="block space-y-1.5">
-                <span className="text-sm font-medium text-ink">อีเมล</span>
-                <input
-                  type="email"
-                  name="email"
-                  required
-                  autoComplete="email"
-                  placeholder="you@example.com"
-                  className={input}
-                />
-              </label>
-              <button type="submit" className={`${btn.primary} w-full`}>
-                ส่งลิงก์เข้าสู่ระบบทางอีเมล
-              </button>
-              <p className="text-center text-xs text-ink-2">
-                ไม่ต้องตั้งรหัสผ่าน — เรากดลิงก์ในอีเมลเพื่อเข้าสู่ระบบ
-              </p>
-            </form>
-          </div>
-        )}
+        <div className="space-y-6">
+          <form action={signInWithGoogle}>
+            <input type="hidden" name="next" value={next} />
+            <button type="submit" className={`${btn.secondary} w-full gap-3`}>
+              <GoogleIcon />
+              เข้าสู่ระบบด้วย Google
+            </button>
+          </form>
+        </div>
       </div>
     </main>
   );
