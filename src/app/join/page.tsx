@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { requireSignedInUser } from "@/lib/auth/require-user";
 import { safeNextPath } from "@/lib/auth/site-url";
-import { REGISTRATION_FORM_URL } from "@/lib/constants";
 import { alert, badge, btn, card, input, label } from "@/components/ui";
 import { Mascot } from "@/components/mascot";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -106,21 +105,6 @@ export default async function JoinPage({ searchParams }: PageProps<"/join">) {
               ยืนยันเพื่อเข้าสู่บทเรียน ➔
             </button>
           </form>
-
-          {/* Links for outsiders or unapproved people */}
-          <div className="border-t border-line/60 pt-4 text-center text-xs text-ink-2 space-y-3">
-            <p className="font-medium text-ink">ยังไม่ได้เป็นสมาชิกในกลุ่ม LINE OpenChat?</p>
-            <div>
-              <a
-                href={REGISTRATION_FORM_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`${btn.secondary} text-xs py-2 w-full block`}
-              >
-                📝 กรอกแบบฟอร์มสมัครเข้าเรียน (Google Forms)
-              </a>
-            </div>
-          </div>
         </div>
 
         {/* Footer signout option */}
