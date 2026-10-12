@@ -14,7 +14,7 @@ export const input =
   "w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-muted outline-none transition focus:border-brand focus:ring-4 focus:ring-brand/15 disabled:opacity-60";
 
 export const card =
-  "rounded-card border border-line bg-surface p-5 shadow-soft";
+  "rounded-2xl border border-line/80 bg-surface p-5 shadow-soft transition hover:border-brand/35";
 
 export const label = "block space-y-1.5 text-sm font-medium text-ink";
 
@@ -29,9 +29,10 @@ export const badge = {
   pink: "inline-flex rounded-pill bg-pink-soft px-2.5 py-0.5 text-xs font-semibold text-pink",
 };
 
-/** Dashed empty-state box. */
+/** Empty-state box. */
 export const empty =
-  "rounded-card border-2 border-dashed border-line bg-surface/60 px-6 py-12 text-center text-ink-2";
+  "rounded-2xl border border-line/70 bg-surface/60 px-6 py-12 text-center text-ink-2";
+
 
 /** Alert boxes used for flash/error messages. */
 export const alert = {

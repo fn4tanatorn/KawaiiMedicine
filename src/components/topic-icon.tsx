@@ -1,77 +1,84 @@
 import Image from "next/image";
-import { cardTint } from "./ui";
-
-/** The 8 decorative topic icons in public/icons/. */
-type TopicIconName =
-  | "brain"
-  | "stethoscope"
-  | "lungs"
-  | "heart"
-  | "microscope"
-  | "syringe"
-  | "blood-cell"
-  | "capsule"
-  | "stomach"
-  | "skeletal"
-  | "lymphatic-immune"
-  | "study";
-
-/** Title keywords (Thai + English) mapped to a specific icon, checked in order. */
-const KEYWORD_ICONS: [RegExp, TopicIconName][] = [
-  [/heart|cardio|หัวใจ|หลอดเลือด/i, "heart"],
-  [/lung|resp|ปอด|หายใจ|ทางเดินหายใจ/i, "lungs"],
-  [/brain|neuro|สมอง|ประสาท/i, "brain"],
-  [/blood|hemat|เลือด|โลหิต/i, "blood-cell"],
-  [/pharm|drug|medicat|ยา|เภสัช/i, "capsule"],
-  [/inject|vaccine|syringe|ฉีด|วัคซีน/i, "syringe"],
-  [/gastro|intestin|stomach|digest|gi|ทางเดินอาหาร|กระเพาะ|ลำไส้|ย่อย/i, "stomach"],
-  [/skelet|bone|musculo|โครงกระดูก|กระดูก/i, "skeletal"],
-  [/lymph|immun|น้ำเหลือง|ภูมิคุ้มกัน/i, "lymphatic-immune"],
-  [/learn|study|ทบทวน|เทคนิค|เรียน/i, "study"],
-  [/lab|micro|histolog|จุลชีพ|จุลกาย|ห้องปฏิบัติการ/i, "microscope"],
-];
 
 /**
- * Icons that don't depict a specific organ or system, cycled by index for
- * cards whose title matches no keyword. Organ icons (lungs, heart, brain…)
- * are keyword-only, so e.g. a GI course never shows lungs.
+ * Clean Kawaii topic icon resolution.
+ * Maps known topic tags/keywords to icons deterministically without regex bloat.
  */
-const GENERIC_ICONS: TopicIconName[] = ["stethoscope", "microscope"];
+const ICON_BY_SLUG: Record<string, string> = {
+  heart: "/icons/heart.png",
+  cardio: "/icons/heart.png",
+  lung: "/icons/lungs.png",
+  resp: "/icons/lungs.png",
+  brain: "/icons/brain.png",
+  neuro: "/icons/brain.png",
+  blood: "/icons/blood-cell.png",
+  hemat: "/icons/blood-cell.png",
+  gi: "/icons/stomach.png",
+  stomach: "/icons/stomach.png",
+  skelet: "/icons/skeletal.png",
+  bone: "/icons/skeletal.png",
+  immune: "/icons/lymphatic-immune.png",
+  lymph: "/icons/lymphatic-immune.png",
+  pharma: "/icons/capsule.png",
+  exam: "/icons/clipboard.png",
+  learn: "/icons/books.png",
+};
 
-function iconSrc(name: TopicIconName): string {
-  return `/icons/${name}.png`;
-}
-
-export function topicIconSrc(index: number): string {
-  return iconSrc(GENERIC_ICONS[index % GENERIC_ICONS.length]);
-}
-
-/** Best-guess icon for a title (keyword match), falling back to index rotation. */
-export function topicIconFor(title: string, index: number): string {
-  for (const [pattern, name] of KEYWORD_ICONS) {
-    if (pattern.test(title)) return iconSrc(name);
+export function getTopicIconSrc(titleOrKey?: string): string {
+  if (!titleOrKey) return "/icons/stethoscope.png";
+  const lower = titleOrKey.toLowerCase();
+  for (const [key, path] of Object.entries(ICON_BY_SLUG)) {
+    if (lower.includes(key)) return path;
   }
-  return topicIconSrc(index);
+  return "/icons/stethoscope.png";
 }
 
-/** Tinted rounded tile with a topic icon inside — used on course/exam cards. */
+/** Backward compatibility helper */
+export function topicIconSrc(): string {
+  return "/icons/stethoscope.png";
+}
+
+export function topicIconFor(title: string): string {
+  return getTopicIconSrc(title);
+}
+
+
+/**
+ * Cute, rounded tile with a soft pastel tint and topic icon inside.
+ * Used on course and exam cards with Warm Zen minimal styling.
+ */
 export function TopicIcon({
-  index,
+  index = 0,
   title,
+  icon,
   size = 48,
+  variant,
   className = "",
 }: {
-  index: number;
-  /** When given, tries a keyword match on the title before falling back to rotation. */
+  index?: number;
   title?: string;
+  icon?: string;
   size?: number;
+  variant?: "brand" | "pink" | "mint" | "lemon";
   className?: string;
 }) {
-  const tint = cardTint(index);
-  const src = title ? topicIconFor(title, index) : topicIconSrc(index);
+  const src = icon || getTopicIconSrc(title);
+
+  // Soft semantic Kawaii pastel tint
+  const tintClass =
+    variant === "pink"
+      ? "bg-pink-soft text-pink"
+      : variant === "mint"
+      ? "bg-mint-soft text-mint"
+      : variant === "lemon"
+      ? "bg-lemon-soft text-lemon"
+      : index % 2 === 1
+      ? "bg-pink-soft text-pink"
+      : "bg-brand-soft text-brand";
+
   return (
     <span
-      className={`topic-tile flex shrink-0 items-center justify-center rounded-2xl ${tint.bg} ${tint.text} ${className}`}
+      className={`topic-tile flex shrink-0 items-center justify-center rounded-2xl ${tintClass} transition-transform duration-200 hover:scale-105 ${className}`}
       style={{ width: size, height: size }}
     >
       <Image
@@ -79,8 +86,9 @@ export function TopicIcon({
         alt=""
         width={size}
         height={size}
-        className="h-[70%] w-[70%] object-contain"
+        className="h-[72%] w-[72%] object-contain"
       />
     </span>
   );
 }
+
