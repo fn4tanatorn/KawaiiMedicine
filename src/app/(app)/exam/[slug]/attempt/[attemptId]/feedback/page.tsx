@@ -5,7 +5,7 @@ import { requireUser } from "@/lib/auth/require-user";
 import { formatScore } from "@/lib/format";
 import { alert, badge, btn, card, input, label } from "@/components/ui";
 import { Mascot } from "@/components/mascot";
-import { submitFeedback } from "@/app/exam/actions";
+import { submitFeedback } from "@/app/(app)/exam/actions";
 
 export const metadata: Metadata = { title: "Feedback" };
 

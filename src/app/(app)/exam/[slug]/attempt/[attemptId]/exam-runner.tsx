@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
-import { saveAnswer, submitAttempt } from "@/app/exam/actions";
+import { saveAnswer, submitAttempt } from "@/app/(app)/exam/actions";
 import { alert, btn, input } from "@/components/ui";
 
 export type RunnerQuestion = {

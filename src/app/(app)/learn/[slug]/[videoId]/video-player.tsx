@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { reportVideoIssue, saveVideoProgress } from "@/app/learn/actions";
+import { reportVideoIssue, saveVideoProgress } from "@/app/(app)/learn/actions";
 import { btn, input } from "@/components/ui";
 
 const SAVE_EVERY_MS = 10_000;
