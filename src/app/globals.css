@@ -14,117 +14,116 @@
      applied before paint by an inline script to avoid a flash.
 --------------------------------------------------------------------------- */
 :root {
-  --bg: #f7f9fe;
+  --bg: #f8fafd;
   --bg-wash:
-    radial-gradient(60rem 30rem at -10% -10%, #ffe4ec 0%, transparent 60%),
-    radial-gradient(50rem 28rem at 110% 0%, #dcebff 0%, transparent 60%),
-    radial-gradient(40rem 20rem at 50% 120%, #fff4d6 0%, transparent 60%);
+    radial-gradient(55rem 24rem at 15% -5%, rgba(255, 228, 236, 0.42) 0%, transparent 70%),
+    radial-gradient(45rem 22rem at 85% -5%, rgba(220, 235, 255, 0.42) 0%, transparent 70%);
   --surface: #ffffff;
-  --surface-2: #f3f6fc;
-  --line: #e4e9f4;
+  --surface-2: #f4f6fb;
+  --line: #e4e8f2;
   --ink: #1f2a5a;
   --ink-2: #5b6688;
   --muted: #8a93b0;
 
-  --brand: #4c8dff; /* primary blue */
+  --brand: #4c8dff; /* primary soft blue */
   --brand-ink: #ffffff;
-  --brand-soft: #e6f0ff;
-  --pink: #f26b8a;
-  --pink-soft: #ffe4ec;
-  --mint: #2fb98a;
-  --mint-soft: #e2f7ee;
-  --lemon: #f2b53a;
-  --lemon-soft: #fff4d6;
+  --brand-soft: #eaf1ff;
+  --pink: #f26b8a; /* kawaii blossom pink */
+  --pink-soft: #ffe6ee;
+  --mint: #2fb98a; /* matcha mint */
+  --mint-soft: #e4f7ef;
+  --lemon: #f2b53a; /* warm butter */
+  --lemon-soft: #fff5da;
   --lavender: #8b7cf6;
-  --lavender-soft: #ece8ff;
+  --lavender-soft: #ede9ff;
   --danger: #e5484d;
   --danger-soft: #ffe5e6;
 
   --shadow-soft:
-    0 6px 24px -12px rgba(31, 42, 90, 0.18), 0 1px 2px rgba(31, 42, 90, 0.06);
-  --shadow-pop: 0 14px 40px -16px rgba(31, 42, 90, 0.28);
+    0 6px 20px -10px rgba(31, 42, 90, 0.12), 0 1px 2px rgba(31, 42, 90, 0.04);
+  --shadow-pop: 0 12px 32px -12px rgba(31, 42, 90, 0.22);
 }
 
 /* Dark values, used when the OS prefers dark AND the visitor hasn't forced light. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #161826;
+    --bg: #151724;
     --bg-wash:
       radial-gradient(
-        60rem 30rem at -10% -10%,
-        rgba(247, 161, 184, 0.10) 0%,
-        transparent 60%
+        55rem 24rem at 15% -5%,
+        rgba(247, 161, 184, 0.07) 0%,
+        transparent 70%
       ),
       radial-gradient(
-        50rem 28rem at 110% 0%,
-        rgba(138, 180, 255, 0.11) 0%,
-        transparent 60%
+        45rem 22rem at 85% -5%,
+        rgba(138, 180, 255, 0.08) 0%,
+        transparent 70%
       );
-    --surface: #1f2236;
-    --surface-2: #2a2e47;
-    --line: #3b4060;
-    --ink: #e9ebf5;
-    --ink-2: #b9bfd8;
-    --muted: #99a0bf;
+    --surface: #1e2133;
+    --surface-2: #282c44;
+    --line: #383d5a;
+    --ink: #eaecf5;
+    --ink-2: #b8bed4;
+    --muted: #959cb8;
 
     --brand: #8ab4ff;
     --brand-ink: #0f1220;
-    --brand-soft: #26355c;
+    --brand-soft: #253356;
     --pink: #f7a1b8;
-    --pink-soft: #43273a;
+    --pink-soft: #422739;
     --mint: #7fdcb9;
-    --mint-soft: #1d3b34;
+    --mint-soft: #1d3a33;
     --lemon: #f0cd86;
-    --lemon-soft: #3f3524;
+    --lemon-soft: #3d3424;
     --lavender: #bcb3fa;
-    --lavender-soft: #332e58;
+    --lavender-soft: #322d55;
     --danger: #ff8d94;
     --danger-soft: #482630;
 
     --shadow-soft:
-      0 6px 24px -12px rgba(0, 0, 0, 0.6), 0 1px 2px rgba(0, 0, 0, 0.4);
-    --shadow-pop: 0 14px 40px -16px rgba(0, 0, 0, 0.7);
+      0 6px 20px -10px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.35);
+    --shadow-pop: 0 12px 32px -12px rgba(0, 0, 0, 0.6);
   }
 }
 
 /* Same dark values, forced on regardless of the OS preference. */
 :root[data-theme="dark"] {
-  --bg: #161826;
+  --bg: #151724;
   --bg-wash:
     radial-gradient(
-      60rem 30rem at -10% -10%,
-      rgba(247, 161, 184, 0.10) 0%,
-      transparent 60%
+      55rem 24rem at 15% -5%,
+      rgba(247, 161, 184, 0.07) 0%,
+      transparent 70%
     ),
     radial-gradient(
-      50rem 28rem at 110% 0%,
-      rgba(138, 180, 255, 0.11) 0%,
-      transparent 60%
+      45rem 22rem at 85% -5%,
+      rgba(138, 180, 255, 0.08) 0%,
+      transparent 70%
     );
-  --surface: #1f2236;
-  --surface-2: #2a2e47;
-  --line: #3b4060;
-  --ink: #e9ebf5;
-  --ink-2: #b9bfd8;
-  --muted: #99a0bf;
+  --surface: #1e2133;
+  --surface-2: #282c44;
+  --line: #383d5a;
+  --ink: #eaecf5;
+  --ink-2: #b8bed4;
+  --muted: #959cb8;
 
   --brand: #8ab4ff;
   --brand-ink: #0f1220;
-  --brand-soft: #26355c;
+  --brand-soft: #253356;
   --pink: #f7a1b8;
-  --pink-soft: #43273a;
+  --pink-soft: #422739;
   --mint: #7fdcb9;
-  --mint-soft: #1d3b34;
+  --mint-soft: #1d3a33;
   --lemon: #f0cd86;
-  --lemon-soft: #3f3524;
+  --lemon-soft: #3d3424;
   --lavender: #bcb3fa;
-  --lavender-soft: #332e58;
+  --lavender-soft: #322d55;
   --danger: #ff8d94;
   --danger-soft: #482630;
 
   --shadow-soft:
-    0 6px 24px -12px rgba(0, 0, 0, 0.6), 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-pop: 0 14px 40px -16px rgba(0, 0, 0, 0.7);
+    0 6px 20px -10px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-pop: 0 12px 32px -12px rgba(0, 0, 0, 0.6);
 }
 
 @theme inline {
