@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getProfile, requireUser } from "@/lib/auth/require-user";
-import { AppHeader } from "@/components/app-header";
 import { Flash } from "@/components/flash";
 import { EmptyState } from "@/components/empty-state";
 import { badge, btn, card, input, label } from "@/components/ui";
@@ -63,14 +62,7 @@ export default async function ProfilePage({
   const examsPassed = (attempts ?? []).filter((a) => a.passed).length;
 
   return (
-    <>
-      <AppHeader
-        user={user}
-        role={profile?.role ?? "student"}
-        fullName={profile?.full_name}
-        lineName={profile?.line_name}
-      />
-      <main className="mx-auto w-full max-w-3xl flex-1 space-y-8 px-6 py-8">
+    <main className="mx-auto w-full max-w-3xl flex-1 space-y-8">
         <h1 className="text-2xl font-semibold">โปรไฟล์</h1>
         <Flash ok={sp.ok} error={sp.error} />
 
@@ -181,6 +173,5 @@ export default async function ProfilePage({
           </form>
         </section>
       </main>
-    </>
   );
 }

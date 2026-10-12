@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { saveLineName } from "@/app/profile/actions";
+import { saveLineName } from "@/app/(app)/profile/actions";
 import { btn, input, label } from "@/components/ui";
 
 export const SNOOZE_COOKIE = "line-name-snoozed";

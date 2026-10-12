@@ -97,6 +97,7 @@ export async function AppHeader({
             <span className="hidden h-5 w-px bg-line xl:block" />
             <Link
               href="/profile"
+              prefetch={true}
               className="flex items-center gap-1.5 rounded-pill py-1 pl-1 pr-1.5 xl:pr-3 text-ink-2 transition hover:bg-surface-2 hover:text-ink"
               title={user.email ?? ""}
             >

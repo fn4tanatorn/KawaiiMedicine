@@ -4,7 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/require-user";
 import { alert, btn, card, input, label } from "@/components/ui";
 import { Mascot } from "@/components/mascot";
-import { submitCourseFeedback } from "@/app/learn/actions";
+import { submitCourseFeedback } from "@/app/(app)/learn/actions";
 
 export const metadata: Metadata = { title: "Feedback" };
 

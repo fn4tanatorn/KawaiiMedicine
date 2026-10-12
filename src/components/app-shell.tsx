@@ -7,10 +7,10 @@ import { AppHeader } from "./app-header";
  */
 export async function AppShell({
   children,
-  nextPath,
+  nextPath = "/learn",
 }: {
   children: React.ReactNode;
-  nextPath: string;
+  nextPath?: string;
 }) {
   const { user } = await requireUser(nextPath);
   const profile = await getProfile(user.id);
