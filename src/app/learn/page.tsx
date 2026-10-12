@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { getProfile, requireUser } from "@/lib/auth/require-user";
+import { isStaffRole } from "@/lib/auth/roles";
 import { PACE_TARGET_PCT, coursePaces } from "@/lib/pace";
 import { alert, badge, btn, card } from "@/components/ui";
 import { EmptyState } from "@/components/empty-state";
@@ -87,7 +88,7 @@ export default async function LearnPage({ searchParams }: PageProps<"/learn">) {
   ]);
 
   const done = new Set((progress ?? []).map((p) => p.video_id));
-  const isStaff = profile?.role === "instructor" || profile?.role === "admin";
+  const isStaff = isStaffRole(profile?.role);
   const resources = (learningResources ?? []).filter(
     (r) => isStaff || r.is_published,
   );

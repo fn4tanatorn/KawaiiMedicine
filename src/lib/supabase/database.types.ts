@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -1337,7 +1337,7 @@ export type Database = {
     }
     Enums: {
       question_kind: "choice" | "text"
-      user_role: "student" | "instructor" | "admin"
+      user_role: "student" | "instructor" | "admin" | "co_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1466,7 +1466,7 @@ export const Constants = {
   public: {
     Enums: {
       question_kind: ["choice", "text"],
-      user_role: ["student", "instructor", "admin"],
+      user_role: ["student", "instructor", "admin", "co_admin"],
     },
   },
 } as const

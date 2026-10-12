@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { requireSignedInUser } from "@/lib/auth/require-user";
+import { isStaffRole } from "@/lib/auth/roles";
 import { safeNextPath } from "@/lib/auth/site-url";
 import { alert, badge, btn, card, input, label } from "@/components/ui";
 import { Mascot } from "@/components/mascot";
@@ -16,7 +17,7 @@ export default async function JoinPage({ searchParams }: PageProps<"/join">) {
   const { user, profile } = await requireSignedInUser("/join");
 
   // If already enrolled or is staff, redirect to app directly
-  const isStaff = profile?.role === "instructor" || profile?.role === "admin";
+  const isStaff = isStaffRole(profile?.role);
   if (isStaff || profile?.enrolled) {
     redirect("/learn");
   }

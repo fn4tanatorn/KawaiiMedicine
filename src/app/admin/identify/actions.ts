@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireAdmin } from "@/lib/auth/require-user";
+import { requireAdminOrCoAdmin } from "@/lib/auth/require-user";
 import { parseLabelLines } from "./parse-labels";
 
 export async function createIdCard(input: {
@@ -15,7 +15,7 @@ export async function createIdCard(input: {
 }): Promise<
   { ok: true; id: string; warning?: string } | { ok: false; error: string }
 > {
-  const { supabase, user } = await requireAdmin("/admin/identify");
+  const { supabase, user } = await requireAdminOrCoAdmin("/admin/identify");
   const title = input.title.trim();
   const subject = input.subject === "histology" ? "histology" : "anatomy";
   const labels = parseLabelLines(input.labels);
@@ -102,7 +102,7 @@ function backTo(formData: FormData, cardId: string, msg: string, ok: boolean) {
  * `organ_system:<label_id>`).
  */
 export async function saveCardLabels(formData: FormData) {
-  const { supabase } = await requireAdmin("/admin/identify");
+  const { supabase } = await requireAdminOrCoAdmin("/admin/identify");
   const cardId = formData.get("card_id")?.toString() ?? "";
   const shown = formData.getAll("label_id").map(String);
   const { data: labels } = await supabase
@@ -162,7 +162,7 @@ export async function saveCardLabels(formData: FormData) {
  * go with it (FK cascade); past answers in id_answers stay for the log.
  */
 export async function deleteIdLabel(formData: FormData) {
-  const { supabase } = await requireAdmin("/admin/identify");
+  const { supabase } = await requireAdminOrCoAdmin("/admin/identify");
   const cardId = formData.get("card_id")?.toString() ?? "";
   const id = formData.get("delete_label")?.toString() ?? "";
   const { data, error } = await supabase
@@ -184,7 +184,7 @@ export async function deleteIdLabel(formData: FormData) {
 }
 
 export async function deleteIdCard(formData: FormData) {
-  const { supabase } = await requireAdmin("/admin/identify");
+  const { supabase } = await requireAdminOrCoAdmin("/admin/identify");
   const id = formData.get("id")?.toString() ?? "";
   const { data } = await supabase
     .from("id_cards")
@@ -199,7 +199,7 @@ export async function deleteIdCard(formData: FormData) {
 }
 
 export async function setIdCardPublished(formData: FormData) {
-  const { supabase } = await requireAdmin("/admin/identify");
+  const { supabase } = await requireAdminOrCoAdmin("/admin/identify");
   const id = formData.get("id")?.toString() ?? "";
   const publish = formData.get("publish") === "true";
   const { error } = await supabase
@@ -217,7 +217,7 @@ export async function setIdCardPublished(formData: FormData) {
 }
 
 export async function setOrganSystemPublished(formData: FormData) {
-  const { supabase } = await requireAdmin("/admin/identify");
+  const { supabase } = await requireAdminOrCoAdmin("/admin/identify");
   const systemId = Number(formData.get("system_id"));
   const mode = formData.get("mode")?.toString() ?? "open_exclusive";
   const back = formData.get("back")?.toString() ?? "";
@@ -352,7 +352,7 @@ export async function setOrganSystemPublished(formData: FormData) {
 }
 
 export async function closeAllIdCards(formData: FormData) {
-  const { supabase } = await requireAdmin("/admin/identify");
+  const { supabase } = await requireAdminOrCoAdmin("/admin/identify");
   const back = formData.get("back")?.toString() ?? "";
 
   // 1. Close all open cards

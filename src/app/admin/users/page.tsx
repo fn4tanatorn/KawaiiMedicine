@@ -3,16 +3,11 @@ import { requireStaff } from "@/lib/auth/require-user";
 import { formatDateTime } from "@/lib/format";
 import { badge, btn, input } from "@/components/ui";
 import { Flash } from "@/components/flash";
+import { ROLE_LABEL } from "@/lib/auth/roles";
 import { getActiveClassCode } from "@/lib/auth/class-code";
 import { deleteUser, toggleUserEnrolled, updateUserRole } from "../actions";
 
 export const metadata: Metadata = { title: "ผู้ใช้" };
-
-const ROLE_LABEL = {
-  student: "ผู้เรียน",
-  instructor: "ผู้สอน",
-  admin: "ผู้ดูแลระบบ",
-} as const;
 
 const DEFAULT_INACTIVE_DAYS = 7;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -226,9 +221,11 @@ export default async function AdminUsersPage({
                       className={
                         u.role === "admin"
                           ? badge.amber
-                          : u.role === "instructor"
-                            ? badge.green
-                            : badge.gray
+                          : u.role === "co_admin"
+                            ? badge.blue
+                            : u.role === "instructor"
+                              ? badge.green
+                              : badge.gray
                       }
                     >
                       {ROLE_LABEL[u.role]}
@@ -236,7 +233,7 @@ export default async function AdminUsersPage({
                   )}
                 </td>
                 <td className="px-4 py-2">
-                  {isAdmin && u.id !== user.id && u.role !== "admin" ? (
+                  {isAdmin && u.id !== user.id && u.role !== "admin" && u.role !== "co_admin" ? (
                     <details className="group">
                       <summary className="cursor-pointer list-none text-xs font-medium text-danger underline-offset-4 hover:underline">
                         ลบบัญชี

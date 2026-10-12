@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requireStaff } from "@/lib/auth/require-user";
+import { ROLE_LABEL } from "@/lib/auth/roles";
 import { card } from "@/components/ui";
 
 export const metadata: Metadata = { title: "จัดการระบบ" };
@@ -81,7 +82,7 @@ export default async function AdminHome() {
       <div>
         <h1 className="text-2xl font-semibold">ภาพรวม</h1>
         <p className="mt-1 text-sm text-ink-2">
-          บทบาทของคุณ: {role === "admin" ? "ผู้ดูแลระบบ" : "ผู้สอน"}
+          บทบาทของคุณ: {ROLE_LABEL[role] ?? role}
         </p>
       </div>
 

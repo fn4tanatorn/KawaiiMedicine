@@ -56,7 +56,9 @@ const ADMIN_NAV = [
   },
 ];
 
-// Beta: visible to admins only (instructors don't see it yet).
+import { isCoAdminOrAdmin } from "@/lib/auth/roles";
+
+// Beta: visible to admins and co-admins (instructors don't see it yet).
 const ADMIN_ONLY_NAV = [
   {
     href: "/admin/identify",
@@ -79,7 +81,9 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
         <div className="mb-6 overflow-x-auto no-scrollbar rounded-pill border border-line bg-surface/70 p-1 shadow-soft">
           <NavLinks
             items={
-              role === "admin" ? [...ADMIN_NAV, ...ADMIN_ONLY_NAV] : ADMIN_NAV
+              isCoAdminOrAdmin(role)
+                ? [...ADMIN_NAV, ...ADMIN_ONLY_NAV]
+                : ADMIN_NAV
             }
             size="sm"
           />
