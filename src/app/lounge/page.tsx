@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { EmptyState } from "@/components/empty-state";
 import { getProfile, requireUser } from "@/lib/auth/require-user";
+import { isStaffRole } from "@/lib/auth/roles";
 import { LoungeComposer } from "./lounge-composer";
 import { LoungePostCard } from "./lounge-post-card";
 import type { LoungePostItem, MoodType, PostReactionSummary } from "./types";
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 export default async function LoungePage() {
   const { supabase, user } = await requireUser("/lounge");
   const profile = await getProfile(user.id);
-  const isStaff = profile?.role === "instructor" || profile?.role === "admin";
+  const isStaff = isStaffRole(profile?.role);
 
   const [{ data: postsData }, { data: reactionsData }] = await Promise.all([
     supabase

@@ -54,7 +54,7 @@ supabase migration new <name>
 
 ### Schema (see `supabase/migrations/`)
 
-- `profiles` (1:1 with `auth.users`, `role` = student | instructor | admin, `enrolled: boolean`, auto-created by trigger)
+- `profiles` (1:1 with `auth.users`, `role` = student | instructor | co_admin | admin, `enrolled: boolean`, auto-created by trigger)
 - `courses` → `videos` (source is `storage_path` in private `videos` bucket **or** `external_url`) ; `video_progress` per user ; `video_watch_days` ; `course_files` → `video_files` (private `course-files` bucket)
 - `exams` → `questions` → `choices` ; `exam_attempts` → `attempt_answers`
 - `id_cards` → `id_card_labels` (answer keys, staff-only) ; `id_pending` ; `id_answers` (quota/history log)

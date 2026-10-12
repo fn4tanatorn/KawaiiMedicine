@@ -778,7 +778,7 @@ export async function updateUserRole(formData: FormData) {
     redirect(withMsg("/admin/users", "error", "เฉพาะผู้ดูแลระบบเท่านั้น"));
   const id = str(formData, "id");
   const newRole = str(formData, "role") as Role;
-  if (!["student", "instructor", "admin"].includes(newRole))
+  if (!["student", "instructor", "co_admin", "admin"].includes(newRole))
     redirect(withMsg("/admin/users", "error", "บทบาทไม่ถูกต้อง"));
   if (id === user.id && newRole !== "admin")
     redirect(withMsg("/admin/users", "error", "ไม่สามารถลดสิทธิ์ตัวเองได้"));
@@ -837,12 +837,12 @@ export async function deleteUser(formData: FormData) {
     .eq("id", id)
     .single();
   if (!target) redirect(withMsg("/admin/users", "error", "ไม่พบผู้ใช้"));
-  if (target.role === "admin")
+  if (target.role === "admin" || target.role === "co_admin")
     redirect(
       withMsg(
         "/admin/users",
         "error",
-        "ลบผู้ดูแลระบบไม่ได้ กรุณาเปลี่ยนบทบาทเป็นผู้เรียนก่อน",
+        "ลบผู้ดูแลระบบหรือผู้ช่วยแอดมินไม่ได้ กรุณาเปลี่ยนบทบาทเป็นผู้เรียนก่อน",
       ),
     );
 

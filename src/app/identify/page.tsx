@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getProfile, requireUser } from "@/lib/auth/require-user";
+import { isStaffRole } from "@/lib/auth/roles";
 import { alert, btn, card } from "@/components/ui";
 import { EmptyState } from "@/components/empty-state";
 import { PageTitle } from "@/components/page-title";
@@ -21,7 +22,7 @@ export default async function IdentifyPage({
     typeof v === "string" ? v : undefined;
 
   const [profile, jar] = await Promise.all([getProfile(user.id), cookies()]);
-  const isStaff = profile?.role === "admin" || profile?.role === "instructor";
+  const isStaff = isStaffRole(profile?.role);
   const studentMode = isStaff && jar.get(STUDENT_MODE_COOKIE)?.value === "1";
   const { data: quotaRows } = await supabase.rpc(
     "id_quota",

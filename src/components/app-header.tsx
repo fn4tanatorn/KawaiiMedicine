@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import type { User } from "@supabase/supabase-js";
-import type { Database } from "@/lib/supabase/database.types";
 import { LineNameModal, SNOOZE_COOKIE } from "./line-name-modal";
 import { NavLinks } from "./nav-links";
 import { ThemeToggle } from "./theme-toggle";
@@ -15,7 +14,7 @@ import {
   Logo,
 } from "./icons";
 
-type Role = Database["public"]["Enums"]["user_role"];
+import { isStaffRole, type Role } from "@/lib/auth/roles";
 
 export async function AppHeader({
   user,
@@ -29,7 +28,7 @@ export async function AppHeader({
   /** undefined = unknown (don't prompt); null = missing (prompt) */
   lineName?: string | null;
 }) {
-  const isStaff = role === "instructor" || role === "admin";
+  const isStaff = isStaffRole(role);
   const snoozed =
     lineName === null && (await cookies()).get(SNOOZE_COOKIE)?.value === "1";
   const display = fullName || user.email || "";

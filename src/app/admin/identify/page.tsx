@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { requireAdmin } from "@/lib/auth/require-user";
+import { requireAdminOrCoAdmin } from "@/lib/auth/require-user";
 import { signQuestionImages } from "@/lib/storage";
 import { badge, btn, input } from "@/components/ui";
 import { Flash } from "@/components/flash";
@@ -23,7 +23,7 @@ export default async function IdentifyAdminPage({
   searchParams,
 }: PageProps<"/admin/identify">) {
   const sp = await searchParams;
-  const { supabase } = await requireAdmin("/admin/identify");
+  const { supabase } = await requireAdminOrCoAdmin("/admin/identify");
   const [{ data: cards }, { data: organSystems }] = await Promise.all([
     supabase
       .from("id_cards")

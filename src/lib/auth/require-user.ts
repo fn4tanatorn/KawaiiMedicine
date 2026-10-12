@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isCoAdminOrAdmin, isStaffRole } from "./roles";
 
 /**
  * One Supabase client + one getUser() per request, shared by layout and page
@@ -46,7 +47,7 @@ export async function requireSignedInUser(nextPath?: string) {
  */
 export async function requireUser(nextPath?: string) {
   const { supabase, user, profile } = await requireSignedInUser(nextPath);
-  const isStaff = profile?.role === "instructor" || profile?.role === "admin";
+  const isStaff = isStaffRole(profile?.role);
   if (!isStaff && profile && !profile.enrolled) {
     const q = nextPath && nextPath !== "/join" ? `?next=${encodeURIComponent(nextPath)}` : "";
     redirect(`/join${q}`);
@@ -55,7 +56,7 @@ export async function requireUser(nextPath?: string) {
 }
 
 /**
- * Same as requireUser, but also requires role instructor or admin.
+ * Same as requireUser, but also requires role instructor, co_admin, or admin.
  * Non-staff users are sent back to /learn. RLS still enforces every
  * query; this is the UI-level gate.
  */
@@ -63,7 +64,7 @@ export async function requireStaff(nextPath?: string) {
   const { supabase, user } = await requireUser(nextPath);
   const profile = await getProfile(user.id);
   const role = profile?.role ?? "student";
-  if (role !== "instructor" && role !== "admin") {
+  if (!isStaffRole(role)) {
     redirect("/learn?error=forbidden");
   }
   return {
@@ -75,7 +76,22 @@ export async function requireStaff(nextPath?: string) {
   };
 }
 
-/** Admin-only gate (e.g. beta features instructors shouldn't see yet). */
+/**
+ * Gate for senior staff features (admin & co_admin).
+ * Used for authoring tools and beta runners like Identify.
+ */
+export async function requireAdminOrCoAdmin(nextPath?: string) {
+  const ctx = await requireStaff(nextPath);
+  if (!isCoAdminOrAdmin(ctx.role)) {
+    redirect(
+      "/admin?error=" +
+        encodeURIComponent("เมนูนี้เปิดให้ผู้ดูแลระบบทดสอบเท่านั้น"),
+    );
+  }
+  return ctx;
+}
+
+/** Admin-only gate (strictly primary admin for dangerous mutations). */
 export async function requireAdmin(nextPath?: string) {
   const ctx = await requireStaff(nextPath);
   if (ctx.role !== "admin") {
